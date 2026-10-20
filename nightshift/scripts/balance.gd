@@ -19,7 +19,7 @@ const FLASH_COOLDOWN: float = 1.2
 const FLASH_ABUSE_STEP: float = 0.6
 const FLASH_ABUSE_DECAY: float = 5.0    # segundos para "olvidar" un uso
 
-const INTERCOM_DURATION: float = 10.0
+const INTERCOM_DURATION: float = 12.0 # Ajuste Mateo: mayor margen de dispersion para el Chef
 const BOILER_COOLDOWN: float = 3.0
 
 # Cornelius (Noches 4-5): una camara interferida atora las rejas abiertas unos segundos
