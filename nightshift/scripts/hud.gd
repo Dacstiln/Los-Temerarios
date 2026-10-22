@@ -9,6 +9,7 @@ signal cam_selected(id: int)
 signal flash_pressed
 signal intercom_pressed
 signal boiler_pressed
+signal wind_pressed
 
 const UIUtil = preload("res://scripts/ui_util.gd")
 const Map = preload("res://scripts/map.gd")
@@ -25,6 +26,11 @@ var cam_title: Label
 var flash_btn: Button
 var intercom_btn: Button
 var boiler_btn: Button
+var wind_btn: Button
+var box_label: Label
+var box_bg: ColorRect
+var box_fill: ColorRect
+var _box_on: bool = false
 var notice: Label
 var debug_label: Label
 var _notice_tween: Tween
@@ -56,7 +62,17 @@ func _ignore(c: Control) -> Control:
 	return c
 
 
+func _panel(rect: Rect2) -> void:
+	var p := Panel.new()
+	p.add_theme_stylebox_override("panel", UIUtil.box(Color(0.02, 0.02, 0.025, 0.62), Color(UIUtil.GOLD_DIM.r, UIUtil.GOLD_DIM.g, UIUtil.GOLD_DIM.b, 0.8), 2))
+	p.position = rect.position
+	p.size = rect.size
+	add_child(_ignore(p))
+
+
 func _build_top() -> void:
+	_panel(Rect2(12, 6, 284, 110))
+	_panel(Rect2(1280 - 24 - 300 + 4, 6, 292, 82))
 	energy_label = UIUtil.label("ENERGÍA  100%", 26)
 	energy_label.position = Vector2(24, 12)
 	energy_label.size = Vector2(300, 34)
@@ -82,6 +98,23 @@ func _build_top() -> void:
 		seg.color = UIUtil.GOLD_DIM
 		add_child(_ignore(seg))
 		usage_segs.append(seg)
+	box_label = UIUtil.label("CAJITA", 14, UIUtil.GOLD_DIM)
+	box_label.position = Vector2(24, 92)
+	box_label.size = Vector2(80, 20)
+	box_label.visible = false
+	add_child(box_label)
+	box_bg = ColorRect.new()
+	box_bg.color = Color(0.15, 0.13, 0.05)
+	box_bg.position = Vector2(104, 97)
+	box_bg.size = Vector2(180, 8)
+	box_bg.visible = false
+	add_child(_ignore(box_bg))
+	box_fill = ColorRect.new()
+	box_fill.color = UIUtil.GOLD
+	box_fill.position = Vector2(104, 97)
+	box_fill.size = Vector2(180, 8)
+	box_fill.visible = false
+	add_child(_ignore(box_fill))
 	night_label = UIUtil.label("NOCHE 1", 20, UIUtil.GOLD_DIM, HORIZONTAL_ALIGNMENT_RIGHT)
 	night_label.position = Vector2(1280 - 24 - 300, 12)
 	night_label.size = Vector2(300, 28)
@@ -128,6 +161,12 @@ func _build_actions() -> void:
 	boiler_btn.size = Vector2(220, 44)
 	boiler_btn.pressed.connect(func(): boiler_pressed.emit())
 	add_child(boiler_btn)
+	wind_btn = UIUtil.button("CUERDA  [R]", 17)
+	wind_btn.position = Vector2(24, 388)
+	wind_btn.size = Vector2(220, 44)
+	wind_btn.visible = false
+	wind_btn.pressed.connect(func(): wind_pressed.emit())
+	add_child(wind_btn)
 
 
 func _build_cam_panel() -> void:
@@ -172,11 +211,31 @@ func set_night_text(text: String) -> void:
 	night_label.text = text
 
 
-func set_features(intercom: bool, boiler: bool) -> void:
+func set_features(intercom: bool, boiler: bool, box: bool = false) -> void:
+	_box_on = box
+	box_label.visible = box
+	box_bg.visible = box
+	box_fill.visible = box
 	_has_intercom = intercom
 	_has_boiler = boiler
 	intercom_btn.visible = intercom
 	boiler_btn.visible = boiler
+
+
+## Medidor de la cajita (siempre visible) y boton CUERDA (solo mirando la Cam 01).
+func set_box(enabled: bool, charge: float, show_button: bool) -> void:
+	if not enabled:
+		return
+	box_fill.size.x = 180.0 * clampf(charge, 0.0, 1.0)
+	var low: bool = charge < 0.25
+	var blink: bool = int(Time.get_ticks_msec() / 250.0) % 2 == 0
+	var col: Color = UIUtil.GOLD
+	if low:
+		col = UIUtil.RED if blink else Color(0.45, 0.1, 0.08)
+	box_fill.color = col
+	box_label.add_theme_color_override("font_color", UIUtil.RED if low else UIUtil.GOLD_DIM)
+	wind_btn.visible = show_button
+	wind_btn.disabled = false
 
 
 func set_monitor(up: bool) -> void:

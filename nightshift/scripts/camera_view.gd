@@ -47,6 +47,8 @@ func _draw() -> void:
 		if cam == 7:
 			draw_rect(FEED, Color(0.0, 0.5, 0.1, 0.16))
 
+	if night.box_enabled and cam == 1 and lit and not blind:
+		_music_box(t)
 	_static(t, 1.0 if cam == 7 else 0.6)
 	_labels(cam, t)
 
@@ -84,9 +86,54 @@ func _labels(cam: int, t: float) -> void:
 		draw_circle(Vector2(430, 84), 7.0, Color(0.9, 0.1, 0.1))
 		draw_string(font, Vector2(442, 91), "REC", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Color(0.9, 0.2, 0.2))
 	draw_string(font, Vector2(0, 640), "GRAND TENEBRIS — SEGURIDAD", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 16, Color(0.8, 1.0, 0.85, 0.5))
+	if night.box_enabled and cam == 1:
+		var low: bool = night.box_charge < 0.25
+		var msg: String = "CAJITA DE MÚSICA: SIN CUERDA" if night.box_charge <= 0.0 else "CAJITA DE MÚSICA: %d%%" % int(round(night.box_charge * 100.0))
+		var c: Color = Color(1.0, 0.3, 0.25, 0.9) if low else Color(0.8, 1.0, 0.85, 0.7)
+		draw_string(font, Vector2(0, 610), msg + "   [R] DAR CUERDA", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 18, c)
 	if night.intercom_cam == cam:
 		var a: float = 0.6 + 0.4 * sin(t * 6.0)
 		draw_string(font, Vector2(0, 130), "[ JAZZ SONANDO EN ESTA CÁMARA ]", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 22, Color(GOLD.r, GOLD.g, GOLD.b, a))
+
+
+## Cajita de musica sobre un pedestal (lado derecho del Lobby). Muestra la manivela y a la
+## Bailarina, que se asoma mas cuanto mas tiempo lleva parada la musica.
+func _music_box(t: float) -> void:
+	var charge: float = night.box_charge
+	var wake: float = 0.0
+	for m in night.monsters:
+		if m.key == "bailarina":
+			wake = m.awake_amount()
+	var base := Vector2(930.0, 455.0)
+	# pedestal
+	draw_rect(Rect2(base.x - 46, base.y - 70, 92, 70), Color(0.20, 0.14, 0.08))
+	draw_rect(Rect2(base.x - 54, base.y - 78, 108, 10), Color(0.34, 0.26, 0.11))
+	draw_rect(Rect2(base.x - 54, base.y - 78, 108, 10), GOLD, false, 2.0)
+	# caja
+	draw_rect(Rect2(base.x - 40, base.y - 112, 80, 36), Color(0.28, 0.13, 0.10))
+	draw_rect(Rect2(base.x - 40, base.y - 112, 80, 36), GOLD, false, 2.0)
+	draw_rect(Rect2(base.x - 34, base.y - 106, 68, 6), Color(GOLD.r, GOLD.g, GOLD.b, 0.5))
+	# manivela (gira mientras suena)
+	var ang: float = t * 3.0 * clampf(charge * 4.0, 0.0, 1.0)
+	var crank := Vector2(base.x + 40, base.y - 94)
+	draw_line(crank, crank + Vector2(cos(ang), sin(ang)) * 16.0, GOLD, 3.0)
+	draw_circle(crank + Vector2(cos(ang), sin(ang)) * 16.0, 3.5, GOLD)
+	# bailarina: dormida = pequeña y tapada; despierta = crece y se inclina
+	var h: float = lerpf(34.0, 96.0, wake)
+	var top := Vector2(base.x + sin(t * 2.0) * 3.0 * wake, base.y - 112 - h)
+	var tint: Color = Color(0.92, 0.88, 0.80).lerp(Color(1.0, 0.55, 0.5), wake)
+	draw_line(Vector2(base.x, base.y - 112), top, tint, 3.0)
+	draw_circle(top, 7.0 + 3.0 * wake, tint)
+	var tutu := Vector2(base.x, base.y - 112 - h * 0.35)
+	draw_colored_polygon(PackedVector2Array([tutu + Vector2(-22, 6), tutu + Vector2(22, 6), tutu + Vector2(8, -8), tutu + Vector2(-8, -8)]), Color(0.9, 0.85, 0.9, 0.9))
+	if wake > 0.25:
+		draw_circle(top + Vector2(-3, -1), 1.8, Color(1, 0.15, 0.1))
+		draw_circle(top + Vector2(3, -1), 1.8, Color(1, 0.15, 0.1))
+	# notas musicales cuando suena
+	if charge > 0.0:
+		for i in 3:
+			var ph: float = fmod(t * 0.6 + i * 0.33, 1.0)
+			draw_string(ThemeDB.fallback_font, Vector2(base.x - 30 + i * 28 + sin(ph * 6.0) * 6.0, base.y - 130 - ph * 70.0), "♪", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 20, Color(GOLD.r, GOLD.g, GOLD.b, 1.0 - ph))
 
 
 # ---------------------------------------------------------------------- escenas

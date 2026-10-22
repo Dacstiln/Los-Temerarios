@@ -7,26 +7,38 @@ const NIGHT_DURATION: float = 360.0
 
 # --- Consumo de energia (Anexo B del GDD). Unidades: % de bateria ---
 const DRAIN_IDLE: float = 0.02          # generador / oficina (siempre)
-const DRAIN_MONITOR: float = 0.06       # "Camaras abiertas (pasivo): Bajo" (por segundo)
-const DRAIN_GATE_PER_SEC: float = 0.22  # "Reja cerrada (por segundo): Alto"
-const COST_BOILER: float = 3.0          # "Sobrecargo de Caldera (por uso): Medio-Alto"
-const COST_FLASH: float = 1.5           # "Flash de Camara (por uso): Medio"
-const COST_INTERCOM: float = 2.5        # "Intercomunicador activo: Medio"
+const DRAIN_MONITOR: float = 0.045      # "Camaras abiertas (pasivo): Bajo" (por segundo)
+const DRAIN_GATE_PER_SEC: float = 0.15  # "Reja cerrada (por segundo): Alto"
+const COST_BOILER: float = 2.0          # "Sobrecargo de Caldera (por uso): Medio-Alto"
+const COST_FLASH: float = 0.7           # "Flash de Camara (por uso): Medio"
+const COST_INTERCOM: float = 1.2        # "Intercomunicador activo: Medio"
 
 # Flash: "Alto si se abusa" -> cada uso reciente encarece el siguiente.
 const FLASH_DURATION: float = 1.0
 const FLASH_COOLDOWN: float = 1.2
-const FLASH_ABUSE_STEP: float = 0.6
+const FLASH_ABUSE_STEP: float = 0.25
 const FLASH_ABUSE_DECAY: float = 5.0    # segundos para "olvidar" un uso
 
-const INTERCOM_DURATION: float = 12.0 # Ajuste Mateo: mayor margen de dispersion para el Chef
+const INTERCOM_DURATION: float = 12.0   # la cancion del Chef dura 12 s
 const BOILER_COOLDOWN: float = 3.0
 
 # Cornelius (Noches 4-5): una camara interferida atora las rejas abiertas unos segundos
 # y acelera a los demas monstruos ("incrementa el riesgo acumulado", GDD Pagina 4).
 const GATE_JAM_TIME: float = 3.0
-const COST_SHORT_CIRCUIT: float = 2.0   # un corto circuito drena el generador aunque lo evites a tiempo
+const COST_SHORT_CIRCUIT: float = 1.5   # un corto circuito drena el generador aunque lo evites a tiempo
 const RISK_PER_BLIND_CAM: float = 0.08
+
+# --- Cajita de musica (Noches 2-5): se le da cuerda desde la Cam 01 ---
+const BOX_CAM: int = 1
+const COST_WIND: float = 0.5            # % de energia por darle cuerda
+const BOX_EMPTY_RISK: float = 0.5       # con la caja parada, los monstruos avanzan 50% mas rapido
+
+# --- Descuido: si pasas demasiado tiempo sin subir el monitor, los monstruos se vuelven audaces ---
+const UNWATCHED_THRESHOLD: float = 18.0 # segundos sin mirar las camaras
+const UNWATCHED_RISK: float = 0.25      # +25% de velocidad, y el Chef elige la reja abierta
+
+# --- Modo depuracion (F1-F4 en la noche). false = oculto del todo (version final) ---
+const DEBUG_KEYS: bool = false
 
 # --- Parametros por noche (MVP: mismo sistema, solo cambian parametros) ---
 # drain: multiplicador de consumo (Noche 1 = -30%, Noche 3 = tasa base 100%, segun GDD Pagina 6).
@@ -43,10 +55,11 @@ const NIGHTS: Dictionary = {
 	2: {
 		"title": "NOCHE 2",
 		"subtitle": "Botones + Chef",
-		"hint": "El Chef reacciona al ruido: aleja su atencion con el Intercomunicador [I].\nElige bien en que camara pones el jazz.",
+		"hint": "El Chef reacciona al ruido: aleja su atención con el Intercomunicador [I].\nDale cuerda a la Cajita de Música en la Cam 01 [R] antes de que se detenga.",
 		"drain": 0.85,
 		"intercom": true,
 		"boiler": false,
+		"box": {"charge": 50.0, "grace": 14.0},
 		"botones": {"interval": 12.0, "window": 6.0, "block_wait": 6.0},
 		"chef": {"interval": 13.0, "window": 5.5, "lure_step": 3.5, "return_step": 4.5, "block_wait": 6.0},
 	},
@@ -57,6 +70,7 @@ const NIGHTS: Dictionary = {
 		"drain": 1.0,
 		"intercom": true,
 		"boiler": true,
+		"box": {"charge": 46.0, "grace": 13.0},
 		"botones": {"interval": 11.0, "window": 5.5, "block_wait": 6.0},
 		"chef": {"interval": 11.5, "window": 5.0, "lure_step": 3.5, "return_step": 4.5, "block_wait": 6.0},
 		"mucama": {"idle_min": 20.0, "idle_max": 32.0, "approach": 12.0, "window": 4.5},
@@ -69,6 +83,7 @@ const NIGHTS: Dictionary = {
 		"drain": 0.95,   # ajuste de playtesting: hay mas amenazas que gestionar
 		"intercom": true,
 		"boiler": true,
+		"box": {"charge": 42.0, "grace": 12.0},
 		"botones": {"interval": 10.5, "window": 5.2, "block_wait": 6.0},
 		"chef": {"interval": 11.0, "window": 4.8, "lure_step": 3.5, "return_step": 4.5, "block_wait": 6.0},
 		"mucama": {"idle_min": 18.0, "idle_max": 30.0, "approach": 11.0, "window": 4.4},
@@ -81,6 +96,7 @@ const NIGHTS: Dictionary = {
 		"drain": 0.92,
 		"intercom": true,
 		"boiler": true,
+		"box": {"charge": 38.0, "grace": 11.0},
 		"botones": {"interval": 9.0, "window": 4.6, "block_wait": 6.0},
 		"chef": {"interval": 9.5, "window": 4.2, "lure_step": 3.0, "return_step": 4.0, "block_wait": 6.0},
 		"mucama": {"idle_min": 17.0, "idle_max": 27.0, "approach": 10.0, "window": 4.0},

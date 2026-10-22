@@ -62,7 +62,7 @@ func on_boiler() -> bool:
 func _tick(delta: float) -> void:
 	match s:
 		S.EN_DUCTOS:
-			timer -= delta
+			timer -= delta * game.risk_mult()
 			if timer <= 0.0:
 				progress = 0.0
 				_cue_timer = 0.0

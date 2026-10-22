@@ -110,6 +110,7 @@ func _advance(delta: float) -> void:
 
 
 func _step() -> void:
+	game.sfx("footstep", -12.0)
 	if location == 1:
 		location = 2
 		_set_state(S.ACERCANDOSE)

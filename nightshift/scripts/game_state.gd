@@ -9,9 +9,29 @@ var current_night: int = 1
 var unlocked_night: int = 1
 var last_result: Dictionary = {}
 
+# --- configuracion (se guarda en save.cfg) ---
+var master_volume: float = 0.8     # 0.0 - 1.0
+var fullscreen: bool = false
+var crt_enabled: bool = true       # efecto de monitor viejo (ruido, curvatura)
+
 
 func _ready() -> void:
 	load_progress()
+	apply_settings()
+
+
+## Aplica volumen y pantalla completa. Se llama al iniciar y al cambiar la configuracion.
+func apply_settings() -> void:
+	AudioServer.set_bus_volume_db(0, linear_to_db(maxf(master_volume, 0.0001)))
+	var mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	if DisplayServer.window_get_mode() != mode:
+		DisplayServer.window_set_mode(mode)
+
+
+## "Nuevo juego": borra el progreso (vuelve a la Noche 1).
+func reset_progress() -> void:
+	unlocked_night = 1
+	save_progress()
 
 
 func start_night(n: int) -> void:
@@ -35,6 +55,9 @@ func win_night() -> void:
 func save_progress() -> void:
 	var cf := ConfigFile.new()
 	cf.set_value("progress", "unlocked_night", unlocked_night)
+	cf.set_value("settings", "master_volume", master_volume)
+	cf.set_value("settings", "fullscreen", fullscreen)
+	cf.set_value("settings", "crt_enabled", crt_enabled)
 	cf.save(SAVE_PATH)
 
 
@@ -42,3 +65,6 @@ func load_progress() -> void:
 	var cf := ConfigFile.new()
 	if cf.load(SAVE_PATH) == OK:
 		unlocked_night = clampi(int(cf.get_value("progress", "unlocked_night", 1)), 1, MAX_NIGHT)
+		master_volume = clampf(float(cf.get_value("settings", "master_volume", 0.8)), 0.0, 1.0)
+		fullscreen = bool(cf.get_value("settings", "fullscreen", false))
+		crt_enabled = bool(cf.get_value("settings", "crt_enabled", true))

@@ -8,9 +8,11 @@ Esta guía explica cómo se juega, cómo funciona cada mecánica por dentro y d�
 
 1. Instala **Godot 4.3** (la versión estándar, no la de .NET).
 2. En Godot: **Importar → elegir `project.godot`**. La primera vez tarda unos segundos en importar.
-3. Presiona **F5** (o el botón de play). Abre el menú principal.
+3. Presiona **F5** (o el botón de play). Abre la **portada**.
 
-El progreso se guarda solo (qué noche tienes desbloqueada).
+La portada tiene **Jugar**, **Configuración**, **Controles** y **Salir**. En **Jugar** eliges **Nuevo juego** (borra el progreso y empieza en la Noche 1, con confirmación si ya tenías avance), **Continuar** o una noche concreta de las que ya desbloqueaste. En **Configuración** ajustas el volumen, la pantalla completa y el efecto de monitor viejo (CRT).
+
+El progreso y la configuración se guardan solos.
 
 ### Controles
 
@@ -20,10 +22,12 @@ El progreso se guarda solo (qué noche tienes desbloqueada).
 | **ESPACIO** | Subir o bajar el monitor de cámaras |
 | **1 – 7** | Cambiar de cámara (con el monitor arriba) |
 | **F** | Flash de cámara (solo en cámaras oscuras) |
-| **I** | Intercomunicador: pone jazz en la cámara seleccionada (desde la Noche 2) |
+| **I** | Intercomunicador: pone jazz 12 segundos en la cámara seleccionada (desde la Noche 2) |
 | **B** | Sobrecargo de Caldera (desde la Noche 3) |
+| **R** | Dar cuerda a la Cajita de Música (mirando la Cam 01; desde la Noche 2) |
 | **ESC** | Pausa |
-| **F1 / F2 / F3 / F4** | Depuración: ver estados de los monstruos / adelantar 30 s / recargar batería / provocar apagón |
+
+El modo depuración (F1 a F4) está **desactivado** en esta versión. Para volver a usarlo: `DEBUG_KEYS = true` en `scripts/balance.gd` (ver `CAMBIOS_V2.md`).
 
 También se puede hacer todo con el mouse (botones en pantalla).
 
@@ -46,17 +50,18 @@ La batería empieza en 100%. Todo lo que haces la gasta:
 | Qué | Gasto |
 |---|---|
 | Oficina (siempre) | 0.02 % |
-| Monitor arriba | +0.06 % |
-| Cada reja cerrada | +0.22 % |
+| Monitor arriba | +0.045 % |
+| Cada reja cerrada | +0.15 % |
 
 **Gasto por uso**
 
 | Acción | Costo |
 |---|---|
-| Sobrecargo de Caldera | 3.0 % |
-| Intercomunicador | 2.5 % |
-| Flash de cámara | 1.5 % (sube 60 % por cada uso reciente: "alto si se abusa") |
-| Corto circuito de Cornelius | 2.0 % (aunque lo evites) |
+| Sobrecargo de Caldera | 2.0 % |
+| Intercomunicador | 1.2 % |
+| Flash de cámara | 0.7 % (sube 25 % por cada uso reciente: "alto si se abusa") |
+| Dar cuerda a la Cajita de Música | 0.5 % |
+| Corto circuito de Cornelius | 1.5 % (aunque lo evites) |
 
 Todo se multiplica por el **factor de drenaje de la noche** (ver tabla de noches).
 
@@ -96,7 +101,7 @@ Las cámaras **oscuras** (4, 5 y 6) solo se ven mientras dura el **Flash** (1 se
 ### El Chef — rejas, o desviarlo con el intercomunicador
 - **Ruta:** Cocina → Recepción → pasillo → reja. Es más ruidoso y agresivo.
 - Las **rejas** también lo detienen igual que al Botones.
-- **Intercomunicador (I):** pone jazz en la cámara que tengas seleccionada durante 10 s. El Chef deja lo que hacía y camina hacia esa cámara. Si estaba ya en tu reja, **se da la vuelta y se va**. Cuando la música termina, regresa a la cocina.
+- **Intercomunicador (I):** pone jazz en la cámara que tengas seleccionada durante **12 s**. El Chef deja lo que hacía y camina hacia esa cámara. Si estaba ya en tu reja, **se da la vuelta y se va**. Cuando la música termina, regresa a la cocina.
 - Solo puede sonar jazz en **una cámara a la vez**, y no funciona en la Cam 07.
 
 ### La Mucama — solo el Sobrecargo de Caldera la detiene
@@ -115,6 +120,16 @@ Las cámaras **oscuras** (4, 5 y 6) solo se ven mientras dura el **Flash** (1 se
   - **No lo bajas a tiempo:** esa cámara queda **ciega el resto de la noche**, las rejas se abren y se **atoran 3 s**, y todos los demás monstruos se aceleran un **8 %** por cada cámara ciega acumulada. No es derrota inmediata, pero se va acumulando.
 - Si no tocas el monitor, no hay corto circuito: el riesgo es no ver nada.
 
+### La Bailarina (Noches 2 a 5) — dale cuerda a la Cajita de Música
+- Vive en la **Cajita de Música** del Lobby (**Cam 01**). Mientras la caja suena, duerme.
+- La cuerda se gasta sola (50 s en la Noche 2, 38 s en la Noche 5). Puedes **oír** la melodía desde la oficina: cuando le queda poca cuerda, **se vuelve lenta y grave**, y el medidor **CAJITA** del HUD parpadea en rojo.
+- Para darle cuerda: sube el monitor, ve a la **Cam 01** y presiona **CUERDA [R]** (o el botón en pantalla). Cuesta 0.5 % de energía y llena la cuerda.
+- Si la música se **detiene**, la Bailarina despierta: se asoma de la caja y tienes **14 s** (11 s en la Noche 5) para darle cuerda. Si no, **jumpscare**.
+- Mientras la caja está parada, **todos los monstruos avanzan un 50 % más rápido**.
+
+### Descuido (todas las noches)
+Si pasas **18 segundos seguidos sin subir el monitor**, se oye un crujido y los monstruos se vuelven **audaces**: avanzan un **25 % más rápido**, la Mucama sale antes de los ductos y el Chef **elige la reja que dejaste abierta**. En cuanto subes el monitor, vuelve a la normalidad.
+
 ---
 
 ## 6. Las 5 noches
@@ -124,7 +139,7 @@ El MVP del GDD son las **Noches 1 a 3**: el mismo sistema, solo cambian los par�
 | Noche | Monstruos | Drenaje | Herramientas nuevas |
 |---|---|---|---|
 | 1 | Botones | 0.70 | Rejas, monitor |
-| 2 | + Chef | 0.85 | Intercomunicador |
+| 2 | + Chef y Bailarina | 0.85 | Intercomunicador, Cajita de Música |
 | 3 | + Mucama | 1.00 | Sobrecargo de Caldera |
 | 4 | + Cornelius | 0.95 | (nada nuevo, más amenazas) |
 | 5 | Todo más rápido | 0.92 | (nada nuevo) |
@@ -143,26 +158,25 @@ Ambas derrotas dependen de una decisión tuya, nunca del azar puro (aunque la ru
 
 ## 7. Resultados de las pruebas automáticas
 
-Un bot jugó las 5 noches con distintos tiempos de reacción y estilos para comprobar que el balance funciona (no sustituye a probarlo con personas):
+Un bot jugó las 5 noches con 6 estilos distintos (atento, lento, sin usar el Flash, descuidado, que mira poco las cámaras y que **nunca** le da cuerda a la caja), 4 partidas por noche y estilo. No sustituye a probarlo con personas:
 
 | Noche | Energía restante (jugador eficiente) | Comentario |
 |---|---|---|
-| 1 | ~82 % | Relajada |
-| 2 | ~68 % | |
-| 3 | ~33 % | |
-| 4 | ~16 % a 18 % | Usar o no el Flash da resultados parecidos: es una decisión real |
-| 5 | ~8 % a 13 % | Ajustada; un jugador con reacciones lentas pierde la mitad de las veces |
+| 1 | ~86 % | Relajada |
+| 2 | ~72 % | |
+| 3 | ~46 % | |
+| 4 | ~37 % | |
+| 5 | ~33 % | El jugador descuidado pierde la mitad de las veces |
 
-Si en tus pruebas sale demasiado fácil o difícil, ajusta **`scripts/balance.gd`**.
-
----
+- Quien **no le da cuerda a la caja** pierde siempre, alrededor del segundo 64 (50 s de cuerda + 14 s de margen).
+- Con los costos nuevos sobra más batería que antes (en la Noche 5 se terminaba con ~10 % y ahora con ~33 %). La presión viene ahora de la Bailarina, el descuido y los monstruos. Si quieres más tensión, sube `drain` de cada noche en `balance.gd`.
 
 ## 8. Dónde está cada cosa
 
 ```
 project.godot               configuración (escena principal, autoloads)
 scenes/
-  main_menu.tscn            menú
+  main_menu.tscn            escena del menú (el contenido lo construye main_menu.gd)
   night.tscn                una noche de juego
   result.tscn               victoria / derrota / final
 scripts/
@@ -171,21 +185,22 @@ scripts/
   energy_system.gd          batería y apagón
   monsters/
     monster.gd              base de todos (estados, apagón)
-    botones.gd  chef.gd  mucama.gd  cornelius.gd
+    botones.gd  chef.gd  mucama.gd  cornelius.gd  bailarina.gd
   map.gd                    cámaras y rutas
   cam_state.gd              cámara normal o interferida
   camera_view.gd            dibujo del monitor
   office_view.gd            dibujo de la oficina
-  figures.gd                dibujo de los 4 monstruos
+  figures.gd                dibujo de los 5 monstruos
   hud.gd                    energía, hora, botones
   jumpscare_view.gd         pantalla del susto
-  result.gd  main_menu.gd  pause_menu.gd  ui_util.gd
-  game_state.gd             progreso guardado (autoload)
+  main_menu.gd              portada, Jugar, Controles y Configuración
+  result.gd  pause_menu.gd  ui_util.gd
+  game_state.gd             progreso y configuración guardados (autoload)
   sound_bank.gd             sonidos sintetizados por código (autoload)
 shaders/crt.gdshader        efecto de monitor CRT
 ```
 
-**Todo el arte y el sonido se generan por código**: no hay imágenes ni archivos de audio. Son *placeholders* funcionales, pensados para reemplazarse.
+**Todo el arte, el sonido y la música se generan por código**: no hay imágenes ni archivos de audio. Son *placeholders* funcionales, pensados para reemplazarse.
 
 ### Cambios comunes
 - **Dificultad de una noche:** `scripts/balance.gd`, bloque `NIGHTS`.
@@ -210,6 +225,6 @@ shaders/crt.gdshader        efecto de monitor CRT
 **Inconsistencia del propio GDD:** el lore dice que la Mucama es de "oído fino" y que de ahí sale el señuelo de audio, pero la tabla de mecánicas dice que el Intercomunicador atrae al **Chef**. El juego sigue la tabla.
 
 **Límites conocidos:**
-- El arte es simple (figuras y fondos dibujados con formas básicas).
+- El arte es más trabajado que en la v1 pero sigue siendo procedural (formas dibujadas por código).
 - El audio está sintetizado y no lo he escuchado en un equipo real.
 - Probé el balance solo con un bot, no con personas.

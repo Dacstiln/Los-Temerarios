@@ -87,11 +87,13 @@ func _tick(delta: float) -> void:
 					step_timer = lure_step
 					if location != lure:
 						location = Map.next_step(location, lure)
+						game.sfx("footstep", -14.0)
 		S.REGRESANDO:
 			step_timer -= delta
 			if step_timer <= 0.0:
 				step_timer = return_step
 				location = Map.next_step(location, 3)
+				game.sfx("footstep", -16.0)
 				if location == 3:
 					progress = 0.0
 					_set_state(S.EN_COCINA)
@@ -117,6 +119,19 @@ func _tick(delta: float) -> void:
 					step_timer = return_step
 
 
+## Reja por la que llega. Normalmente 50/50; si llevas tiempo sin mirar las camaras,
+## el Chef "huele" el hueco: elige la reja que esta abierta (y si ambas, al azar).
+func _pick_side() -> String:
+	if game.is_negligent():
+		var l: bool = game.is_gate_closed("left")
+		var r: bool = game.is_gate_closed("right")
+		if l and not r:
+			return "right"
+		if r and not l:
+			return "left"
+	return "left" if randf() < 0.5 else "right"
+
+
 func _advance(delta: float) -> void:
 	progress += delta * game.risk_mult()
 	if progress >= interval:
@@ -125,11 +140,12 @@ func _advance(delta: float) -> void:
 
 
 func _step() -> void:
+	game.sfx("footstep", -10.0)
 	if location == 3:
 		location = 2
 		_set_state(S.ACERCANDOSE)
 	elif location == 2:
-		side = "left" if randf() < 0.5 else "right"
+		side = _pick_side()
 		location = Map.DOOR_CAM[side]
 		game.sfx("clang", -10.0)
 	elif location == 4 or location == 5:

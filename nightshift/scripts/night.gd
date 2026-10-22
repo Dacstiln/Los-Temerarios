@@ -16,6 +16,7 @@ const Botones = preload("res://scripts/monsters/botones.gd")
 const Chef = preload("res://scripts/monsters/chef.gd")
 const Mucama = preload("res://scripts/monsters/mucama.gd")
 const Cornelius = preload("res://scripts/monsters/cornelius.gd")
+const Bailarina = preload("res://scripts/monsters/bailarina.gd")
 const CRT_SHADER = preload("res://shaders/crt.gdshader")
 
 # --- estado de la noche (leido por vistas y monstruos) ---
@@ -39,6 +40,13 @@ var flash_recent: float = 0.0
 var monitor_lock: float = 0.0   # monitor reiniciandose tras un corto circuito
 var gate_jam: float = 0.0       # rejas atoradas abiertas (Interferencia de Cornelius)
 var _crt_alert: bool = false
+var box_enabled: bool = false      # Cajita de Musica (Noches 2-5)
+var box_charge: float = 1.0        # 1.0 = cuerda llena, 0.0 = parada
+var box_seconds: float = 45.0      # duracion de una cuerda completa
+var unwatched_t: float = 0.0       # segundos seguidos con el monitor abajo
+var _negligent: bool = false
+var _low_energy_warned: bool = false
+var _last_hour: int = 0
 var monsters: Array = []
 var cams: Dictionary = {}
 var energy: Node = null
@@ -93,6 +101,7 @@ func _build_views() -> void:
 	crt_rect.material = mat
 	crt_layer.add_child(crt_rect)
 	crt_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	crt_rect.visible = GameState.crt_enabled
 
 
 func _build_energy() -> void:
@@ -119,6 +128,12 @@ func _build_monsters() -> void:
 		var k = Cornelius.new()
 		k.setup(self, cfg["cornelius"])
 		_register_monster(k)
+	if cfg.has("box"):
+		box_enabled = true
+		box_seconds = float(cfg["box"].get("charge", 45.0))
+		var bl = Bailarina.new()
+		bl.setup(self, cfg["box"])
+		_register_monster(bl)
 
 
 func _register_monster(m) -> void:
@@ -139,8 +154,9 @@ func _build_hud() -> void:
 	hud.flash_pressed.connect(do_flash)
 	hud.intercom_pressed.connect(do_intercom)
 	hud.boiler_pressed.connect(do_boiler)
+	hud.wind_pressed.connect(do_wind)
 	hud.set_night_text(String(cfg["title"]))
-	hud.set_features(bool(cfg.get("intercom", false)), bool(cfg.get("boiler", false)))
+	hud.set_features(bool(cfg.get("intercom", false)), bool(cfg.get("boiler", false)), box_enabled)
 	hud.set_cam(current_cam)
 
 	var pl := CanvasLayer.new()
@@ -161,7 +177,7 @@ func _show_intro() -> void:
 	bg.color = Color(0, 0, 0, 1)
 	intro_overlay.add_child(bg)
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var title := UIUtil.label(String(cfg["title"]), 72, UIUtil.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
+	var title := UIUtil.title_label(String(cfg["title"]), 72, UIUtil.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
 	title.position = Vector2(0, 190)
 	title.size = Vector2(1280, 90)
 	intro_overlay.add_child(title)
@@ -178,6 +194,12 @@ func _show_intro() -> void:
 	hint.size = Vector2(1000, 80)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_overlay.add_child(hint)
+	for ly in [172.0, 520.0]:
+		var line := ColorRect.new()
+		line.color = Color(UIUtil.GOLD.r, UIUtil.GOLD.g, UIUtil.GOLD.b, 0.55)
+		line.position = Vector2(340, ly)
+		line.size = Vector2(600, 2)
+		intro_overlay.add_child(line)
 	var skip := UIUtil.label("(cualquier tecla para empezar)", 14, UIUtil.GOLD_DIM, HORIZONTAL_ALIGNMENT_CENTER)
 	skip.position = Vector2(0, 650)
 	skip.size = Vector2(1280, 22)
@@ -204,6 +226,10 @@ func _begin() -> void:
 	for m in monsters:
 		m.active = true
 	SoundBank.start_loop("hum", -14.0)
+	SoundBank.start_loop("ambience", -22.0)
+	if box_enabled:
+		SoundBank.start_loop("musicbox", -9.0)
+	SoundBank.play("chime", -8.0)
 	hud.notify("Sobrevive hasta las 6:00 AM")
 
 
@@ -247,7 +273,17 @@ func risk_mult() -> float:
 	for id in cams.keys():
 		if cams[id].is_blind():
 			blind += 1
-	return 1.0 + Balance.RISK_PER_BLIND_CAM * blind
+	var mult: float = 1.0 + Balance.RISK_PER_BLIND_CAM * blind
+	if box_enabled and box_charge <= 0.0:
+		mult += Balance.BOX_EMPTY_RISK       # sin musica, los monstruos se envalentonan
+	if _negligent:
+		mult += Balance.UNWATCHED_RISK       # sin vigilancia, tambien
+	return mult
+
+
+## True si llevas demasiado tiempo sin mirar las camaras (los monstruos se vuelven audaces).
+func is_negligent() -> bool:
+	return _negligent
 
 
 ## Interferencia de Cornelius: la camara queda ciega el resto de la noche y las rejas
@@ -380,6 +416,25 @@ func do_boiler() -> void:
 		hud.notify("Sobrecargo de Caldera: sin efecto", UIUtil.GOLD_DIM)
 
 
+## Cajita de Musica: solo se le da cuerda mirando la Cam 01 con el monitor arriba.
+func do_wind() -> void:
+	if not box_enabled or not monitor_up or not started or is_over or blackout:
+		return
+	if current_cam != Balance.BOX_CAM:
+		hud.notify("La cajita está en la Cam 01", UIUtil.GOLD_DIM)
+		return
+	if box_charge > 0.85:
+		hud.notify("La cajita aún tiene cuerda", UIUtil.GOLD_DIM)
+		return
+	energy.spend_use(Balance.COST_WIND)
+	var was_empty: bool = box_charge <= 0.0
+	box_charge = 1.0
+	SoundBank.play("wind", -2.0)
+	if was_empty:
+		SoundBank.start_loop("musicbox", -9.0)
+	hud.notify("Cajita de Música: cuerda llena", UIUtil.GREEN)
+
+
 # ============================================================ ciclo de la noche
 
 func _process(delta: float) -> void:
@@ -396,6 +451,9 @@ func _process(delta: float) -> void:
 		return
 
 	elapsed += delta
+	_update_box(delta)
+	_update_unwatched(delta)
+	_update_audio_cues()
 	flash_cd = maxf(0.0, flash_cd - delta)
 	boiler_cd = maxf(0.0, boiler_cd - delta)
 	flash_recent = maxf(0.0, flash_recent - delta / Balance.FLASH_ABUSE_DECAY)
@@ -405,6 +463,45 @@ func _process(delta: float) -> void:
 			_stop_intercom()
 	if elapsed >= Balance.NIGHT_DURATION:
 		_win()
+
+
+## La cuerda se gasta sola; la musica se vuelve lenta y grave cuando esta por acabarse.
+func _update_box(delta: float) -> void:
+	if not box_enabled or blackout:
+		return
+	var before: float = box_charge
+	box_charge = maxf(0.0, box_charge - delta / box_seconds)
+	if box_charge <= 0.0:
+		if before > 0.0:
+			SoundBank.stop_loop("musicbox")
+			SoundBank.play("box_stop", -3.0)
+			hud.notify("¡La cajita de música se detuvo!", UIUtil.RED)
+	else:
+		var slow: float = clampf(box_charge / 0.25, 0.0, 1.0)
+		SoundBank.set_loop("musicbox", -9.0, lerpf(0.55, 1.0, slow))
+
+
+func _update_unwatched(delta: float) -> void:
+	if monitor_up:
+		unwatched_t = 0.0
+		_negligent = false
+		return
+	unwatched_t += delta
+	if not _negligent and unwatched_t >= Balance.UNWATCHED_THRESHOLD:
+		_negligent = true
+		SoundBank.play("creak", -6.0)
+
+
+## Pistas de audio generales: campanada cada hora y aviso de bateria baja.
+func _update_audio_cues() -> void:
+	var hour: int = int(clampf(elapsed / Balance.NIGHT_DURATION, 0.0, 1.0) * 6.0)
+	if hour > _last_hour and hour < 6:
+		_last_hour = hour
+		SoundBank.play("chime", -6.0)
+	if not _low_energy_warned and energy.energy <= 20.0:
+		_low_energy_warned = true
+		SoundBank.play("warn", -4.0)
+		hud.notify("ENERGÍA BAJA", UIUtil.RED)
 
 
 func _update_hud() -> void:
@@ -427,6 +524,7 @@ func _update_hud() -> void:
 		hud.monitor_btn.text = "MONITOR  [ESPACIO]"
 		hud.monitor_btn.disabled = blackout
 	hud.set_intercom_active(intercom_cam)
+	hud.set_box(box_enabled, box_charge, monitor_up and current_cam == Balance.BOX_CAM and not blackout)
 	if debug_on:
 		var lines: Array = []
 		for m in monsters:
@@ -458,6 +556,8 @@ func _on_depleted() -> void:
 	_stop_intercom()
 	SoundBank.stop_loop("hum")
 	SoundBank.stop_loop("tick")
+	SoundBank.stop_loop("musicbox")
+	SoundBank.stop_loop("ambience")
 	SoundBank.play("blackout")
 	hud.set_monitor(false)
 	hud.set_blackout(true)
@@ -496,6 +596,7 @@ func _on_jumpscare(m, reason: String) -> void:
 		"night": night,
 		"reason": reason,
 		"monster": m.display_name,
+		"monster_key": m.key,
 		"hint": m.counter_hint,
 	}
 	var layer := CanvasLayer.new()
@@ -537,15 +638,20 @@ func _input(event: InputEvent) -> void:
 		KEY_F: do_flash()
 		KEY_I: do_intercom()
 		KEY_B: do_boiler()
+		KEY_R: do_wind()
 		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:
 			select_cam(ke.keycode - KEY_0)
-		# --- atajos de depuracion para playtesting ---
+		# --- atajos de depuracion: solo existen si Balance.DEBUG_KEYS = true ---
 		KEY_F1:
-			debug_on = not debug_on
-			hud.debug_label.visible = debug_on
+			if Balance.DEBUG_KEYS:
+				debug_on = not debug_on
+				hud.debug_label.visible = debug_on
 		KEY_F2:
-			elapsed += 30.0
+			if Balance.DEBUG_KEYS:
+				elapsed += 30.0
 		KEY_F3:
-			energy.refill()
+			if Balance.DEBUG_KEYS:
+				energy.refill()
 		KEY_F4:
-			energy.energy = 0.5
+			if Balance.DEBUG_KEYS:
+				energy.energy = 0.5

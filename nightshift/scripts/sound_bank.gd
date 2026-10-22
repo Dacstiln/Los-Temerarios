@@ -12,6 +12,8 @@ var _loops: Dictionary = {}
 const ALL_SOUNDS: Array = [
 	"hum", "static", "footstep", "clang", "gate", "hiss", "flash", "jazz",
 	"scream", "bell", "blackout", "vent", "ui", "arrive", "tick",
+	"hover", "click", "chime", "warn", "creak", "wind", "box_stop", "musicbox",
+	"ambience", "win", "lose",
 ]
 
 
@@ -52,6 +54,14 @@ func start_loop(sound: String, vol_db: float = -6.0) -> void:
 	p.volume_db = vol_db
 	p.play()
 	_loops[sound] = p
+
+
+## Cambia volumen y tono de un bucle que ya esta sonando (la cajita de musica lo usa).
+func set_loop(sound: String, vol_db: float, pitch: float = 1.0) -> void:
+	if _loops.has(sound):
+		var p: AudioStreamPlayer = _loops[sound]
+		p.volume_db = vol_db
+		p.pitch_scale = pitch
 
 
 func stop_loop(sound: String) -> void:
@@ -109,6 +119,18 @@ func _build(sound: String) -> AudioStreamWAV:
 		"ui": return _snd_ui()
 		"arrive": return _snd_arrive()
 		"tick": return _snd_tick()
+		"hover": return _snd_hover()
+		"click": return _snd_click()
+		"chime": return _snd_chime()
+		"warn": return _snd_warn()
+		"creak": return _snd_creak()
+		"wind": return _snd_wind()
+		"box_stop": return _snd_box_stop()
+		"musicbox": return _snd_musicbox()
+		"ambience": return _snd_ambience()
+		"win": return _snd_win()
+		"lose": return _snd_lose()
+		"menu_theme": return _snd_menu_theme()
 	return null
 
 
@@ -322,4 +344,196 @@ func _snd_tick() -> AudioStreamWAV:
 		var f: float = 2400.0 if t < 0.5 else 1500.0
 		var env: float = exp(-tt * 70.0)
 		b[i] = (sin(TAU * f * tt) * 0.6 + _noise() * 0.25) * env * 0.7
+	return _to_stream(b, true)
+
+
+# ================================================= sonidos de interfaz y ambiente (v2)
+
+func _snd_hover() -> AudioStreamWAV:
+	var b := _buf(0.05)
+	for i in b.size():
+		var t: float = float(i) / RATE
+		b[i] = exp(-t * 90.0) * sin(TAU * 1800.0 * t) * 0.22
+	return _to_stream(b, false)
+
+
+func _snd_click() -> AudioStreamWAV:
+	var b := _buf(0.12)
+	for i in b.size():
+		var t: float = float(i) / RATE
+		b[i] = exp(-t * 45.0) * (0.45 * sin(TAU * 620.0 * t) + 0.2 * sin(TAU * 1240.0 * t)) + exp(-t * 200.0) * _noise() * 0.25
+	return _to_stream(b, false)
+
+
+## Campanilla de recepcion de hotel: "ding" doble.
+func _snd_chime() -> AudioStreamWAV:
+	var b := _buf(1.6)
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var v: float = exp(-t * 3.2) * (sin(TAU * 1318.5 * t) + 0.4 * sin(TAU * 2637.0 * t))
+		var t2: float = t - 0.28
+		if t2 > 0.0:
+			v += exp(-t2 * 3.0) * (sin(TAU * 1568.0 * t2) + 0.35 * sin(TAU * 3136.0 * t2))
+		b[i] = v * 0.2
+	return _to_stream(b, false)
+
+
+## Aviso de bateria baja: dos pitidos.
+func _snd_warn() -> AudioStreamWAV:
+	var b := _buf(0.7)
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var on: bool = fmod(t, 0.35) < 0.18
+		b[i] = (0.3 * signf(sin(TAU * 740.0 * t)) if on else 0.0)
+	return _to_stream(b, false)
+
+
+## Crujido de madera/tuberia vieja: pista de que algo se mueve en la oscuridad.
+func _snd_creak() -> AudioStreamWAV:
+	var b := _buf(1.1)
+	var ph: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var f: float = 95.0 + 55.0 * sin(TAU * 2.3 * t) + 40.0 * t
+		ph += TAU * f / RATE
+		var env: float = minf(t / 0.1, 1.0) * exp(-t * 2.2)
+		b[i] = env * (0.28 * signf(sin(ph)) * (0.6 + 0.4 * sin(TAU * 17.0 * t)) + 0.08 * _noise())
+	return _to_stream(b, false)
+
+
+## Manivela de la cajita: carraca que se acelera.
+func _snd_wind() -> AudioStreamWAV:
+	var b := _buf(1.0)
+	var next_click: float = 0.0
+	var interval: float = 0.16
+	var env_t: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		if t >= next_click:
+			next_click += interval
+			interval = maxf(0.05, interval * 0.86)
+			env_t = 0.0
+		env_t += 1.0 / RATE
+		b[i] = exp(-env_t * 90.0) * (_noise() * 0.5 + 0.5 * sin(TAU * 900.0 * env_t)) * 0.55 + 0.05 * sin(TAU * 110.0 * t) * minf(t * 4.0, 1.0)
+	return _to_stream(b, false)
+
+
+## La musica se arrastra y muere: notas que bajan de tono y se alargan.
+func _snd_box_stop() -> AudioStreamWAV:
+	var b := _buf(1.8)
+	var notes: Array = [659.0, 587.0, 523.0, 440.0, 392.0, 330.0]
+	var starts: Array = [0.0, 0.18, 0.40, 0.68, 1.02, 1.42]
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var v: float = 0.0
+		for k in notes.size():
+			var tn: float = t - float(starts[k])
+			if tn >= 0.0:
+				var f: float = float(notes[k]) * (1.0 - 0.06 * k * 0.3)
+				v += exp(-tn * 5.0) * (sin(TAU * f * tn) + 0.3 * sin(TAU * f * 2.76 * tn))
+		b[i] = v * 0.22
+	return _to_stream(b, false)
+
+
+## Nana de caja de musica (melodia original, La menor). Bucle de 4.8 s.
+func _snd_musicbox() -> AudioStreamWAV:
+	var notes: Array = [659.25, 783.99, 880.0, 783.99, 659.25, 587.33, 523.25, 587.33, 659.25, 523.25, 440.0, 493.88]
+	var step: float = 0.4
+	var b := _buf(step * notes.size())
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var idx: int = mini(int(t / step), notes.size() - 1)
+		var tn: float = t - idx * step
+		var f: float = notes[idx]
+		var v: float = exp(-tn * 4.5) * (sin(TAU * f * tn) + 0.35 * sin(TAU * f * 2.76 * tn) * exp(-tn * 8.0) + 0.15 * sin(TAU * f * 5.4 * tn) * exp(-tn * 14.0))
+		# la nota anterior sigue sonando un poco para que no corte seco
+		if idx > 0:
+			var tp: float = tn + step
+			var fp: float = notes[idx - 1]
+			v += exp(-tp * 4.5) * sin(TAU * fp * tp)
+		b[i] = v * 0.28
+	return _to_stream(b, true)
+
+
+## Ambiente del hotel: viento grave y respiracion lenta de tuberias. Bucle de 6 s.
+func _snd_ambience() -> AudioStreamWAV:
+	var dur: float = 6.0
+	var b := _buf(dur)
+	var lp: float = 0.0
+	var lp2: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var n: float = _noise()
+		lp += 0.015 * (n - lp)
+		lp2 += 0.06 * (n - lp2)
+		var swell: float = 0.55 + 0.45 * sin(TAU * (2.0 / dur) * t)
+		b[i] = (lp * 9.0 * swell + lp2 * 0.9 * (0.5 + 0.5 * sin(TAU * (3.0 / dur) * t + 1.0))) * 0.5 + 0.05 * sin(TAU * 41.0 * t) * swell
+	return _to_stream(b, true)
+
+
+func _snd_win() -> AudioStreamWAV:
+	var b := _buf(2.2)
+	var notes: Array = [523.25, 659.25, 783.99, 1046.5]
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var v: float = 0.0
+		for k in notes.size():
+			var tn: float = t - k * 0.18
+			if tn >= 0.0:
+				v += exp(-tn * 2.4) * (sin(TAU * float(notes[k]) * tn) + 0.3 * sin(TAU * float(notes[k]) * 2.0 * tn))
+		b[i] = v * 0.2
+	return _to_stream(b, false)
+
+
+func _snd_lose() -> AudioStreamWAV:
+	var b := _buf(2.2)
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var f: float = 180.0 * exp(-t * 0.9)
+		var v: float = sin(TAU * f * t) + sin(TAU * f * 1.06 * t) + 0.4 * sin(TAU * f * 2.0 * t)
+		b[i] = v * exp(-t * 1.4) * 0.28
+	return _to_stream(b, false)
+
+
+## Musica del menu: jazz lento y de salon (Am7 - Dm7 - G7 - Cmaj7), bajo, piano y escobillas.
+## Bucle de 12 s. Se sintetiza una sola vez al abrir el menu.
+func _snd_menu_theme() -> AudioStreamWAV:
+	var beat: float = 0.75
+	var bars: int = 4
+	var dur: float = beat * 4.0 * bars
+	var b := _buf(dur)
+	var chords: Array = [
+		[220.0, 261.63, 329.63, 392.0],
+		[146.83, 220.0, 261.63, 349.23],
+		[196.0, 246.94, 293.66, 349.23],
+		[261.63, 329.63, 392.0, 493.88],
+	]
+	var bass: Array = [110.0, 73.42, 98.0, 130.81]
+	var mel: Array = [659.25, 0.0, 587.33, 523.25, 0.0, 698.46, 659.25, 0.0, 587.33, 0.0, 493.88, 587.33, 659.25, 0.0, 523.25, 0.0]
+	var lp: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var bar: int = mini(int(t / (beat * 4.0)), bars - 1)
+		var tb: float = fmod(t, beat)
+		var bt: int = int(t / beat)
+		var v: float = 0.0
+		# bajo
+		var fb: float = bass[bar]
+		v += 0.30 * exp(-tb * 3.5) * (sin(TAU * fb * t) + 0.35 * sin(TAU * fb * 2.0 * t))
+		# acorde (en el 2 y el 4)
+		if bt % 2 == 1:
+			var ts: float = tb
+			for f in chords[bar]:
+				v += 0.05 * exp(-ts * 2.2) * (sin(TAU * float(f) * t) + 0.25 * sin(TAU * float(f) * 2.0 * t))
+		# melodia, una nota cada negra de corchea
+		var mi: int = mini(int(t / (beat * 0.25)), mel.size() - 1)
+		var fm: float = mel[mi]
+		if fm > 0.0:
+			var tm: float = fmod(t, beat * 0.25)
+			v += 0.10 * exp(-tm * 3.0) * (sin(TAU * fm * t) + 0.2 * sin(TAU * fm * 3.0 * t))
+		# escobillas
+		if bt % 2 == 1:
+			v += 0.04 * _noise() * exp(-tb * 14.0)
+		lp += 0.55 * (v - lp)
+		b[i] = lp + 0.006 * _noise()
 	return _to_stream(b, true)
