@@ -30,3 +30,12 @@
   - CAM 04 y 05 (Pasillos): Perspectiva profunda, alfombra central, puertas de habitaciones numeradas y apliques de pared en antorcha.
   - CAM 06 (Calderas): Caldera monumental de hierro con remaches, portezuela con fuego y brasas animadas, manómetro de presión y tuberías con válvulas.
   - CAM 07 (Conductos): Túnel de chapa galvanizada en perspectiva forzada con remaches y marcas de arrastre.
+- **Rediseño Visual de los Monstruos y Siluetas (Fase 3 Arte y Escenarios):**
+  - Implementación de sombreado volumétrico anatómico y claroscuro en `figures.gd`.
+  - Halos espectrales luminosos en los ojos de todos los monstruos para una visibilidad tétrica en penumbra y tras las rejas.
+  - El Botones: Uniforme de gala con charreteras militares, botones con relieve y sonrisa cosida con puntadas negras.
+  - El Chef: Silueta corpulenta, manchas de sangre detalladas en el delantal y cuchilla de carnicero de acero con filo resplandeciente.
+  - La Mucama: Vestido victoriano con pliegues en cascada, ojos espectrales ciegos con lágrimas oscuras y plumero antiguo.
+  - Cornelius: Levita con faldones en pico, bastón con empuñadura dorada, monóculo brillante y reloj de bolsillo de oro con destello.
+  - La Bailarina: Muñeca de porcelana agrietada con tutú geométrico de pétalos y ojos rubí.
+  - Jumpscares (`draw_face`): Rostros en primer plano enriquecidos con cuencas profundas, fauces abiertas y colmillos sombreados en 3D.

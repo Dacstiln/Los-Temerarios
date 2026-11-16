@@ -3,3 +3,4 @@
 - [x] Mateo: Conversión de botones de ayuda a texto difuminado no interactivo en el HUD.
 - [x] Mateo: Rediseño visual y ambientación de la Oficina (Fase 1 Arte y Escenarios).
 - [x] Mateo: Rediseño visual y ambientación de las 7 salas de cámaras (Fase 2 Arte y Escenarios).
+- [x] Mateo: Sombreado volumétrico y rediseño visual de los monstruos (Fase 3 Arte y Escenarios).
