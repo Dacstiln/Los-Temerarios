@@ -16,3 +16,9 @@
   - Sustitución de los botones de acción (`FLASH`, `INTERCOM`, `CALDERA`, `CUERDA`) por componentes `ActionGuide` no interactivos (`mouse_filter = MOUSE_FILTER_IGNORE`).
   - Estilo visual tenue y difuminado con bordes translúcidos y teclas de atajo destacadas (`[ F ]`, `[ I ]`, `[ B ]`, `[ R ]`).
   - Estados dinámicos para cooldown (temporizador en Caldera) y modo activo (intercomunicador de Jazz).
+- **Rediseño Visual de la Oficina (Fase 1 Arte y Escenarios):**
+  - Ambientación Art Déco: zócalos de caoba con molduras biseladas y franjas textiles.
+  - Reloj de pared analógico sincronizado en tiempo real con las horas de la noche.
+  - Accesorios de época en el escritorio: taza de café de porcelana con vapor animado, bitácora de turnos con sello del hotel y lámpara de banquero con pantalla verde esmeralda.
+  - Monitor CRT mejorado con pantalla convexa de fósforo, estática procedural y resplandor sobre el escritorio.
+  - Rejas de ascensor estilo acordeón con remaches de tijera, barra de impacto pesada y placas de bronce.
