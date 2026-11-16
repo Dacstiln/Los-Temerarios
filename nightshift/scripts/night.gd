@@ -641,6 +641,8 @@ func _input(event: InputEvent) -> void:
 		KEY_R: do_wind()
 		KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7:
 			select_cam(ke.keycode - KEY_0)
+		KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4, KEY_KP_5, KEY_KP_6, KEY_KP_7:
+			select_cam(ke.keycode - KEY_KP_1 + 1)
 		# --- atajos de depuracion: solo existen si Balance.DEBUG_KEYS = true ---
 		KEY_F1:
 			if Balance.DEBUG_KEYS:

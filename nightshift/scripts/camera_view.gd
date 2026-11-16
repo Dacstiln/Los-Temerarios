@@ -81,11 +81,18 @@ func _draw_dark(_t: float) -> void:
 func _labels(cam: int, t: float) -> void:
 	draw_rect(FEED, Color(0.6, 0.6, 0.55, 0.5), false, 2.0)
 	var font: Font = ThemeDB.fallback_font
-	draw_string(font, Vector2(0, 92), Map.cam_name(cam), HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 24, Color(0.8, 1.0, 0.85))
+	var c_name: String = Map.cam_name(cam)
+	var font_size: int = 24
+	var text_w: float = font.get_string_size(c_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size).x
+	var start_x: float = (1280.0 - text_w) * 0.5
+	var text_y: float = 78.0
+
+	draw_string(font, Vector2(start_x, text_y), c_name, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, Color(0.8, 1.0, 0.85))
 	if fmod(t, 1.2) < 0.7:
-		draw_circle(Vector2(430, 84), 7.0, Color(0.9, 0.1, 0.1))
-		draw_string(font, Vector2(442, 91), "REC", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Color(0.9, 0.2, 0.2))
-	draw_string(font, Vector2(0, 640), "GRAND TENEBRIS — SEGURIDAD", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 16, Color(0.8, 1.0, 0.85, 0.5))
+		var rec_x: float = start_x - 56.0
+		draw_circle(Vector2(rec_x, text_y - 8.0), 6.0, Color(0.9, 0.15, 0.15))
+		draw_string(font, Vector2(rec_x + 12.0, text_y - 1.0), "REC", HORIZONTAL_ALIGNMENT_LEFT, -1.0, 18, Color(0.9, 0.2, 0.2))
+	draw_string(font, Vector2(0, 630), "GRAND TENEBRIS — SEGURIDAD", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 16, Color(0.8, 1.0, 0.85, 0.5))
 	if night.box_enabled and cam == 1:
 		var low: bool = night.box_charge < 0.25
 		var msg: String = "CAJITA DE MÚSICA: SIN CUERDA" if night.box_charge <= 0.0 else "CAJITA DE MÚSICA: %d%%" % int(round(night.box_charge * 100.0))
