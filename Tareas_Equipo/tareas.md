@@ -2,3 +2,4 @@
 - [x] Mateo: Rediseño del Mapa de Cámaras con control dual (mouse y teclas 1-7 en plano esquemático).
 - [x] Mateo: Conversión de botones de ayuda a texto difuminado no interactivo en el HUD.
 - [x] Mateo: Rediseño visual y ambientación de la Oficina (Fase 1 Arte y Escenarios).
+- [x] Mateo: Rediseño visual y ambientación de las 7 salas de cámaras (Fase 2 Arte y Escenarios).

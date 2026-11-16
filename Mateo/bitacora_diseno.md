@@ -22,3 +22,11 @@
   - Accesorios de época en el escritorio: taza de café de porcelana con vapor animado, bitácora de turnos con sello del hotel y lámpara de banquero con pantalla verde esmeralda.
   - Monitor CRT mejorado con pantalla convexa de fósforo, estática procedural y resplandor sobre el escritorio.
   - Rejas de ascensor estilo acordeón con remaches de tijera, barra de impacto pesada y placas de bronce.
+- **Rediseño Visual de los Escenarios de Cámaras (Fase 2 Arte y Escenarios):**
+  - Efecto CCTV: Viñeta de lente de seguridad convexa y sombreado perimetral en todas las cámaras.
+  - CAM 01 (Lobby): Alfombra de diamantes dorados, columnas de mármol negro con estrías doradas y candelabro de cristal.
+  - CAM 02 (Recepción): Casillero de llaves con borlas rojas, mostrador de caoba con mármol verde, timbre de conserje y teléfono de época.
+  - CAM 03 (Cocina): Suelo de damero ajedrezado, azulejos sanitarios, mesa de acero inoxidable y altavoz de jazz con ondas sonoras.
+  - CAM 04 y 05 (Pasillos): Perspectiva profunda, alfombra central, puertas de habitaciones numeradas y apliques de pared en antorcha.
+  - CAM 06 (Calderas): Caldera monumental de hierro con remaches, portezuela con fuego y brasas animadas, manómetro de presión y tuberías con válvulas.
+  - CAM 07 (Conductos): Túnel de chapa galvanizada en perspectiva forzada con remaches y marcas de arrastre.
