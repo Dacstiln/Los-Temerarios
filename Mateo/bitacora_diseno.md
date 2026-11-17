@@ -39,3 +39,9 @@
   - Cornelius: Levita con faldones en pico, bastón con empuñadura dorada, monóculo brillante y reloj de bolsillo de oro con destello.
   - La Bailarina: Muñeca de porcelana agrietada con tutú geométrico de pétalos y ojos rubí.
   - Jumpscares (`draw_face`): Rostros en primer plano enriquecidos con cuencas profundas, fauces abiertas y colmillos sombreados en 3D.
+- **Ambientación Sonora y Música de Tensión:**
+  - **Música de Tensión Procedural (`tension`):** Síntesis de dark ambient drone en `sound_bank.gd` (sub-graves a 40/55 Hz con pulso LFO sordo de 2 s, tritono disonante en 77.75 Hz / 155.5 Hz con respiración armónica de 8 s, y rumor subterráneo con crossfade fino en bucle continuo).
+  - **Dinamismo y Escalamiento en Tiempo Real (`night.gd`):** Volumen y tono de la tensión escalan de forma continua de 12:00 AM (-26 dB) a 5:00 AM (-16 dB). Se intensifican dinámicamente si hay amenazas inmediatas en las rejas (+4.5 dB), si la caja de música está baja (+3.0 dB) o ante negligencia prolongada.
+  - **Crujidos y Sonidos Vivos del Edificio:** Temporizador estocástico (intervalo de 13 a 26 segundos) que reproduce crujidos de madera vieja (`creak`), quejidos de vigas/tuberías pesadas (`groan`) y ráfagas distantes de viento (`wind`).
+  - **Diferenciación Acústica de la Oficina:** Atenuación del zumbido de sala de guardia al subir el monitor CRT y chasquido analógico de apertura/cierre de monitor (`ui`).
+  - **Corte Sepulcral en Apagón:** Detención instantánea de zumbidos eléctricos y música de tensión ante descarga total de batería, dejando un silencio aterrador.

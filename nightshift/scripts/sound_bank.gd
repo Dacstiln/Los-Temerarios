@@ -13,7 +13,7 @@ const ALL_SOUNDS: Array = [
 	"hum", "static", "footstep", "clang", "gate", "hiss", "flash", "jazz",
 	"scream", "bell", "blackout", "vent", "ui", "arrive", "tick",
 	"hover", "click", "chime", "warn", "creak", "wind", "box_stop", "musicbox",
-	"ambience", "win", "lose",
+	"ambience", "tension", "groan", "win", "lose", "menu_theme",
 ]
 
 
@@ -23,6 +23,13 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_pool.append(p)
+
+
+func _exit_tree() -> void:
+	stop_all_loops()
+	for p in _pool:
+		if is_instance_valid(p):
+			p.stop()
 
 
 ## Sintetiza todo de una vez (se llama mientras se muestra la tarjeta de la noche).
@@ -128,6 +135,8 @@ func _build(sound: String) -> AudioStreamWAV:
 		"box_stop": return _snd_box_stop()
 		"musicbox": return _snd_musicbox()
 		"ambience": return _snd_ambience()
+		"tension": return _snd_tension()
+		"groan": return _snd_groan()
 		"win": return _snd_win()
 		"lose": return _snd_lose()
 		"menu_theme": return _snd_menu_theme()
@@ -144,6 +153,19 @@ func _buf(seconds: float) -> PackedFloat32Array:
 
 func _noise() -> float:
 	return randf() * 2.0 - 1.0
+
+
+func _xfade(b: PackedFloat32Array, seconds: float = 0.05) -> void:
+	var samples: int = int(RATE * seconds)
+	if samples <= 0 or samples * 2 > b.size():
+		return
+	for i in samples:
+		var w: float = float(i) / float(samples)
+		var end_idx: int = b.size() - samples + i
+		var start_idx: int = i
+		var blend: float = b[start_idx] * w + b[end_idx] * (1.0 - w)
+		b[start_idx] = blend
+		b[end_idx] = blend
 
 
 func _to_stream(buf: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
@@ -171,6 +193,7 @@ func _snd_hum() -> AudioStreamWAV:
 	for i in b.size():
 		var t: float = float(i) / RATE
 		b[i] = 0.18 * sin(TAU * 50.0 * t) + 0.10 * sin(TAU * 100.0 * t) + 0.04 * sin(TAU * 150.0 * t) + 0.015 * _noise()
+	_xfade(b, 0.04)
 	return _to_stream(b, true)
 
 
@@ -468,7 +491,55 @@ func _snd_ambience() -> AudioStreamWAV:
 		lp2 += 0.06 * (n - lp2)
 		var swell: float = 0.55 + 0.45 * sin(TAU * (2.0 / dur) * t)
 		b[i] = (lp * 9.0 * swell + lp2 * 0.9 * (0.5 + 0.5 * sin(TAU * (3.0 / dur) * t + 1.0))) * 0.5 + 0.05 * sin(TAU * 41.0 * t) * swell
+	_xfade(b, 0.06)
 	return _to_stream(b, true)
+
+
+## Musica de tension: drone oscuro con sub-graves palpitantes, tritono disonante (Mib / La)
+## y respiracion misteriosa de frecuencias bajas. Bucle perfecto de 8.0 s.
+func _snd_tension() -> AudioStreamWAV:
+	var dur: float = 8.0
+	var b := _buf(dur)
+	var lp: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var lfo_pulse: float = 0.5 + 0.5 * sin(TAU * 0.5 * t)
+		var lfo_swell: float = 0.6 + 0.4 * sin(TAU * 0.125 * t)
+		var lfo_detune: float = sin(TAU * 0.25 * t)
+
+		var sub: float = 0.35 * sin(TAU * 55.0 * t) + 0.18 * sin(TAU * 40.0 * t + lfo_detune * 0.5)
+		sub *= (0.7 + 0.3 * lfo_pulse)
+
+		var diss: float = 0.14 * sin(TAU * 77.75 * t) + 0.09 * sin(TAU * 65.5 * t) + 0.05 * sin(TAU * 155.5 * t)
+		diss *= lfo_swell
+
+		var n: float = _noise()
+		lp += 0.02 * (n - lp)
+		var rumble: float = lp * 5.0 * (0.6 + 0.4 * sin(TAU * (1.0 / dur) * t))
+
+		var mixed: float = sub + diss + rumble * 0.12
+		b[i] = tanh(mixed * 1.5) * 0.55
+	_xfade(b, 0.06)
+	return _to_stream(b, true)
+
+
+## Crujido de vigas de madera o tuberia pesada quejandose: sonido organico del hotel.
+func _snd_groan() -> AudioStreamWAV:
+	var dur: float = 1.5
+	var b := _buf(dur)
+	var ph: float = 0.0
+	var lp: float = 0.0
+	for i in b.size():
+		var t: float = float(i) / RATE
+		var f: float = 80.0 - 35.0 * (t / dur) + 12.0 * sin(TAU * 3.5 * t)
+		ph += TAU * f / RATE
+		var friction: float = 0.6 + 0.4 * signf(sin(TAU * 24.0 * t))
+		var n: float = _noise()
+		lp += 0.15 * (n - lp)
+		var env: float = minf(t / 0.12, 1.0) * exp(-t * 1.8)
+		var s: float = (0.35 * sin(ph) * friction + 0.12 * sin(ph * 2.3) + lp * 0.15) * env
+		b[i] = tanh(s * 1.6) * 0.45
+	return _to_stream(b, false)
 
 
 func _snd_win() -> AudioStreamWAV:

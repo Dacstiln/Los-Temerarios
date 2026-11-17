@@ -47,6 +47,8 @@ var unwatched_t: float = 0.0       # segundos seguidos con el monitor abajo
 var _negligent: bool = false
 var _low_energy_warned: bool = false
 var _last_hour: int = 0
+var _tension_vol: float = -26.0
+var _creak_timer: float = 14.0
 var monsters: Array = []
 var cams: Dictionary = {}
 var energy: Node = null
@@ -227,6 +229,7 @@ func _begin() -> void:
 		m.active = true
 	SoundBank.start_loop("hum", -14.0)
 	SoundBank.start_loop("ambience", -22.0)
+	SoundBank.start_loop("tension", -26.0)
 	if box_enabled:
 		SoundBank.start_loop("musicbox", -9.0)
 	SoundBank.play("chime", -8.0)
@@ -345,7 +348,7 @@ func toggle_monitor() -> void:
 	energy.monitor_up = monitor_up
 	camera_view.visible = monitor_up
 	office_view.visible = not monitor_up
-	SoundBank.play("ui")
+	SoundBank.play("ui", -2.0, 1.2 if monitor_up else 0.85)
 	hud.set_monitor(monitor_up)
 	_apply_crt()
 
@@ -454,6 +457,7 @@ func _process(delta: float) -> void:
 	_update_box(delta)
 	_update_unwatched(delta)
 	_update_audio_cues()
+	_update_ambient_audio(delta)
 	flash_cd = maxf(0.0, flash_cd - delta)
 	boiler_cd = maxf(0.0, boiler_cd - delta)
 	flash_recent = maxf(0.0, flash_recent - delta / Balance.FLASH_ABUSE_DECAY)
@@ -502,6 +506,56 @@ func _update_audio_cues() -> void:
 		_low_energy_warned = true
 		SoundBank.play("warn", -4.0)
 		hud.notify("ENERGÍA BAJA", UIUtil.RED)
+
+
+## Actualiza la musica de tension evolutiva y los crujidos esporadicos del hotel.
+func _update_ambient_audio(delta: float) -> void:
+	# 1. Escalamiento gradual de tension segun el avance de la noche (12 AM -> 5 AM)
+	var prog: float = clampf(elapsed / Balance.NIGHT_DURATION, 0.0, 1.0)
+	var target_vol: float = lerpf(-26.0, -16.0, prog)
+	var target_pitch: float = 1.0 + prog * 0.04
+
+	# 2. Factor de peligro inmediato: monstruos en las rejas laterales
+	var in_danger: bool = (monster_at_gate("left") != "" or monster_at_gate("right") != "")
+	if in_danger:
+		target_vol += 4.5
+		target_pitch += 0.05
+
+	# 3. Factor de tension por la caja de musica
+	if box_enabled and box_charge < 0.25 and box_charge > 0.0:
+		target_vol += 3.0
+		target_pitch += 0.03
+
+	# 4. Factor de tension por descuido / negligencia
+	if _negligent:
+		target_vol += 2.0
+
+	_tension_vol = move_toward(_tension_vol, target_vol, delta * 3.5)
+	SoundBank.set_loop("tension", _tension_vol, target_pitch)
+
+	# Diferenciacion de zumbido de oficina segun si el monitor esta arriba o abajo
+	if monitor_up:
+		SoundBank.set_loop("hum", -19.0, 0.95)
+	else:
+		SoundBank.set_loop("hum", -14.0, 1.0)
+
+	# 5. Crujidos y quejidos organicos esporadicos del edificio
+	_creak_timer -= delta
+	if _creak_timer <= 0.0:
+		_creak_timer = randf_range(13.0, 26.0)
+		_play_building_creak()
+
+
+func _play_building_creak() -> void:
+	if is_over or blackout:
+		return
+	var r: float = randf()
+	if r < 0.45:
+		SoundBank.play("creak", randf_range(-16.0, -11.0), randf_range(0.85, 1.15))
+	elif r < 0.80:
+		SoundBank.play("groan", randf_range(-17.0, -12.0), randf_range(0.85, 1.1))
+	else:
+		SoundBank.play("wind", randf_range(-22.0, -17.0), randf_range(0.9, 1.2))
 
 
 func _update_hud() -> void:
@@ -558,6 +612,7 @@ func _on_depleted() -> void:
 	SoundBank.stop_loop("tick")
 	SoundBank.stop_loop("musicbox")
 	SoundBank.stop_loop("ambience")
+	SoundBank.stop_loop("tension")
 	SoundBank.play("blackout")
 	hud.set_monitor(false)
 	hud.set_blackout(true)
