@@ -7,7 +7,9 @@ const Map = preload("res://scripts/map.gd")
 const UIUtil = preload("res://scripts/ui_util.gd")
 const CamState = preload("res://scripts/cam_state.gd")
 const EnergySystem = preload("res://scripts/energy_system.gd")
-const OfficeView = preload("res://scripts/office_view.gd")
+const OfficeView2D = preload("res://scripts/office_view.gd")
+const OfficeView3D = preload("res://scripts/3d/office_view_3d.gd")
+const USE_3D_OFFICE: bool = true
 const CameraView = preload("res://scripts/camera_view.gd")
 const Hud = preload("res://scripts/hud.gd")
 const PauseMenu = preload("res://scripts/pause_menu.gd")
@@ -83,7 +85,10 @@ func _ready() -> void:
 # ================================================================ construccion
 
 func _build_views() -> void:
-	office_view = OfficeView.new()
+	if USE_3D_OFFICE:
+		office_view = OfficeView3D.new()
+	else:
+		office_view = OfficeView2D.new()
 	office_view.night = self
 	add_child(office_view)
 	office_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
