@@ -1,7 +1,7 @@
 extends Node3D
 ## Controlador del Entorno 3D de la Oficina.
-## Maneja: Rotación de cámara tipo FNAF, iluminación en tiempo real,
-## rejas mecánicas 3D animadas y puntos de anclaje para modelos GLB externos.
+## Maneja: Rotación de cámara tipo FNAF, iluminación equilibrada en tiempo real,
+## luces de puertas (Q/E) con revelado de monstruos en sombra y modelos GLB.
 
 var night = null
 
@@ -14,8 +14,10 @@ var night = null
 @onready var gate_right: Node3D = $Gates/GateRight
 
 # --- Nodos de Iluminación 3D ---
-@onready var office_lamp: SpotLight3D = $Lights/DeskLampLight
 @onready var room_light: OmniLight3D = $Lights/RoomCeilingLight
+@onready var office_lamp: SpotLight3D = $Lights/DeskLampLight
+@onready var lamp_bulb: OmniLight3D = $Lights/DeskLampBulb
+@onready var tv_glow: SpotLight3D = $Lights/MonitorGlowLight
 @onready var light_door_left: SpotLight3D = $Lights/DoorLeftLight
 @onready var light_door_right: SpotLight3D = $Lights/DoorRightLight
 @onready var vent_light: OmniLight3D = $Lights/VentLight
@@ -79,24 +81,36 @@ func _process(delta: float) -> void:
 
 	# 3. Iluminación y estados de juego
 	if night.blackout:
-		office_lamp.light_energy = 0.0
 		room_light.light_energy = 0.0
+		office_lamp.light_energy = 0.0
+		lamp_bulb.light_energy = 0.0
+		tv_glow.light_energy = 0.0
 		light_door_left.light_energy = 0.0
 		light_door_right.light_energy = 0.0
 		flashlight.light_energy = 0.0
 		vent_light.light_energy = 0.0
 	else:
-		# Parpadeo sutil en la lámpara verde
-		var flicker: float = 1.0 + sin(Time.get_ticks_msec() * 0.015) * 0.035
-		office_lamp.light_energy = 2.2 * flicker
-		room_light.light_energy = 0.4
+		# Oficina general: iluminada de forma clara y nítida
+		room_light.light_energy = 0.85
 
-		# Flash (F)
-		flashlight.light_energy = 3.8 if (night.flash_time > 0.0) else 0.0
+		# Lámpara de escritorio: sutil, no quema
+		var lamp_flicker: float = 1.0 + sin(Time.get_ticks_msec() * 0.015) * 0.03
+		office_lamp.light_energy = 1.15 * lamp_flicker
+		lamp_bulb.light_energy = 0.35 * lamp_flicker
 
-		# Luces en puertas
-		light_door_left.light_energy = 1.4 if (night.flash_time > 0.0 and current_yaw > 0.25) else 0.12
-		light_door_right.light_energy = 1.4 if (night.flash_time > 0.0 and current_yaw < -0.25) else 0.12
+		# TV / Monitor CRT: brillo de fósforo azul tenue
+		var tv_flicker: float = 1.0 + (sin(Time.get_ticks_msec() * 0.035) + sin(Time.get_ticks_msec() * 0.08)) * 0.04
+		tv_glow.light_energy = 0.65 * tv_flicker
+
+		# Luces en las puertas (Controladas por Q y E)
+		var left_on: bool = night.door_light.get("left", false)
+		var right_on: bool = night.door_light.get("right", false)
+
+		light_door_left.light_energy = 4.2 if left_on else 0.0
+		light_door_right.light_energy = 4.2 if right_on else 0.0
+
+		# Linterna / Flash
+		flashlight.light_energy = 3.5 if (night.flash_time > 0.0) else 0.0
 
 		# Resplandor de caldera
 		vent_light.light_energy = night.boiler_glow * 3.0 if night.boiler_glow > 0.0 else 0.0
@@ -143,7 +157,7 @@ func _setup_props() -> void:
 			_hide_placeholders(monitor_anchor)
 			var inst = mon_scene.instantiate() as Node3D
 			inst.scale = Vector3(0.18, 0.18, 0.18)
-			inst.rotation_degrees = Vector3(0.0, 180.0, 0.0) # Orientar pantalla hacia el guardia
+			inst.rotation_degrees = Vector3(0.0, 180.0, 0.0)
 			inst.position = Vector3(0.0, 0.0, 0.0)
 			monitor_anchor.add_child(inst)
 
@@ -167,6 +181,19 @@ func _setup_props() -> void:
 			inst.rotation_degrees = Vector3(0.0, 180.0, 0.0)
 			inst.position = Vector3(0.0, 0.0, 0.0)
 			chair_anchor.add_child(inst)
+
+	# 5. MONSTRUO BOTONES (Si existe)
+	if ResourceLoader.exists("res://assets/3d/monsters/botones.glb"):
+		var bot_scene = load("res://assets/3d/monsters/botones.glb") as PackedScene
+		if bot_scene:
+			_hide_placeholders(monster_left_anchor)
+			_hide_placeholders(monster_right_anchor)
+			var inst_l = bot_scene.instantiate() as Node3D
+			inst_l.scale = Vector3(0.9, 0.9, 0.9)
+			monster_left_anchor.add_child(inst_l)
+			var inst_r = bot_scene.instantiate() as Node3D
+			inst_r.scale = Vector3(0.9, 0.9, 0.9)
+			monster_right_anchor.add_child(inst_r)
 
 
 func _hide_placeholders(anchor: Node) -> void:

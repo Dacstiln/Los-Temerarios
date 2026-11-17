@@ -32,6 +32,7 @@ var monitor_up: bool = false
 var current_cam: int = 1
 var gate_closed: Dictionary = {"left": false, "right": false}
 var gate_anim: Dictionary = {"left": 0.0, "right": 0.0}
+var door_light: Dictionary = {"left": false, "right": false}
 var intercom_cam: int = -1
 var intercom_timer: float = 0.0
 var boiler_cd: float = 0.0
@@ -343,6 +344,29 @@ func toggle_gate(side: String) -> void:
 	SoundBank.play("gate", -4.0)
 
 
+func toggle_door_light(side: String) -> void:
+	if not started or is_over or blackout:
+		return
+	door_light[side] = not door_light.get(side, false)
+	if hud.has_method("set_door_light"):
+		hud.set_door_light(side, door_light[side])
+	SoundBank.play("click", -1.0, 1.25 if door_light[side] else 0.85)
+
+
+func set_door_light(side: String, active: bool) -> void:
+	if not started or is_over or blackout:
+		door_light[side] = false
+		if hud.has_method("set_door_light"):
+			hud.set_door_light(side, false)
+		return
+	if door_light.get(side, false) != active:
+		door_light[side] = active
+		if hud.has_method("set_door_light"):
+			hud.set_door_light(side, active)
+		if active:
+			SoundBank.play("click", -1.0, 1.25)
+
+
 func toggle_monitor() -> void:
 	if not started or is_over or blackout:
 		return
@@ -368,7 +392,19 @@ func select_cam(id: int) -> void:
 
 
 func do_flash() -> void:
-	if not monitor_up or not started or is_over or blackout or flash_cd > 0.0:
+	if not started or is_over or blackout:
+		return
+	if not monitor_up:
+		if office_view is OfficeView3D and office_view.office_3d_instance != null:
+			var yaw: float = office_view.office_3d_instance.current_yaw
+			if yaw > 0.15:
+				toggle_door_light("left")
+			elif yaw < -0.15:
+				toggle_door_light("right")
+			else:
+				toggle_door_light("left")
+		return
+	if flash_cd > 0.0:
 		return
 	if not Map.is_dark(current_cam):
 		hud.notify("Esta cámara no está oscura", UIUtil.GOLD_DIM)
@@ -608,6 +644,11 @@ func _on_depleted() -> void:
 	blackout = true
 	gate_closed["left"] = false
 	gate_closed["right"] = false
+	door_light["left"] = false
+	door_light["right"] = false
+	if hud.has_method("set_door_light"):
+		hud.set_door_light("left", false)
+		hud.set_door_light("right", false)
 	monitor_up = false
 	energy.monitor_up = false
 	camera_view.visible = false
@@ -695,6 +736,8 @@ func _input(event: InputEvent) -> void:
 		KEY_SPACE: toggle_monitor()
 		KEY_A: toggle_gate("left")
 		KEY_D: toggle_gate("right")
+		KEY_Q: toggle_door_light("left")
+		KEY_E: toggle_door_light("right")
 		KEY_F: do_flash()
 		KEY_I: do_intercom()
 		KEY_B: do_boiler()
