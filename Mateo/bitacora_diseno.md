@@ -45,3 +45,16 @@
   - **Crujidos y Sonidos Vivos del Edificio:** Temporizador estocástico (intervalo de 13 a 26 segundos) que reproduce crujidos de madera vieja (`creak`), quejidos de vigas/tuberías pesadas (`groan`) y ráfagas distantes de viento (`wind`).
   - **Diferenciación Acústica de la Oficina:** Atenuación del zumbido de sala de guardia al subir el monitor CRT y chasquido analógico de apertura/cierre de monitor (`ui`).
   - **Corte Sepulcral en Apagón:** Detención instantánea de zumbidos eléctricos y música de tensión ante descarga total de batería, dejando un silencio aterrador.
+
+## Migración a Entorno 3D y Modelos Reales (Sprint Final - Rama 3D)
+- **Oficina 3D Interactiva y Modelos Reales (`office_3d.tscn`):**
+  - Implementación de paneo de cámara horizontal suave controlado por mouse (-58° a +58°) imitando la perspectiva del guardia en FNAF.
+  - Integración y calibración de assets 3D reales descargados de Sketchfab: escritorio victoriano (`desk.glb`), lámpara de banquero esmeralda (`lamp.glb`), monitor CRT retro (`monitor.glb`) y sillón de guardia (`chair.glb`).
+  - Rejas mecánicas 3D animadas con respuesta a teclas `A` y `D`.
+  - Mecánica de iluminación de puertas (teclas `Q` para puerta izquierda y `E` para puerta derecha): pasillos exteriores permanecen en penumbra profunda para ocultar amenazas hasta encender el foco halógeno.
+  - Iluminación equilibrada: lámpara de escritorio tenue, resplandor de fósforo azul CRT en la mesa y luz cenital cálida de la oficina.
+- **Sistema Multicámara 3D (CCTV para 7 salas):**
+  - Creación de dioramas 3D independientes para las 7 salas del hotel en `cctv_3d.tscn`.
+  - Cámara de seguridad fija por sala con paneo lento automático (-3° a +3°) y preservación del shader CRT analógico.
+  - CAM 01 (Lobby con columnas de mármol y pedestal de caja de música), CAM 02 (Recepción con mostrador y timbre), CAM 03 (Cocina con azulejos y altavoz de jazz), CAM 04 y 05 (Pasillos oscuros iluminables con Flash `F`), CAM 06 (Calderas con fuego activo y sobrecargo `B`), CAM 07 (Túnel de ventilación galvanizado).
+  - Estado de "SIN SEÑAL" automático para cámaras saboteadas por Cornelius.

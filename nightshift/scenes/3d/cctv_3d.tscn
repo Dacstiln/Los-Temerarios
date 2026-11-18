@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://cctv3dview01"]
+[gd_scene format=3 uid="uid://cctv3dview01"]
 
 [ext_resource type="Script" path="res://scripts/3d/cctv_controller_3d.gd" id="1_cctv"]
 
