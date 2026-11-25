@@ -11,6 +11,7 @@ extends Node3D
 const MonsterFactory = preload("res://scripts/3d/monster_factory_3d.gd")
 const CorneliusScript = preload("res://scripts/monsters/cornelius.gd")
 const MucamaScript = preload("res://scripts/monsters/mucama.gd")
+const CctvDecor = preload("res://scripts/3d/cctv_decor_3d.gd")
 
 ## Zona del suelo donde se paran los monstruos en cada sala (coordenadas locales de la sala).
 ## "center" es el punto para profundidad 0.5; half_w / half_d en metros, medidos segun
@@ -88,6 +89,12 @@ func _ready() -> void:
 			_hide_placeholders(anchor)
 
 	_check_and_load_room_models()
+
+	# Decoracion de las salas (mallas primitivas, sin archivos que cargar)
+	var decor = CctvDecor.new()
+	decor.name = "Decor"
+	add_child(decor)
+	decor.build(self, _rooms, $WorldEnvironment)
 
 
 func _process(_delta: float) -> void:
