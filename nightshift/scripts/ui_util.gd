@@ -73,6 +73,33 @@ static func menu_button(text: String, font_size: int = 20) -> Button:
 	return b
 
 
+## Opcion de menu al estilo FNAF 1: texto plano alineado a la izquierda, sin caja;
+## al pasar el raton aparece ">>" delante y se oye el click.
+static func fnaf_button(text: String, font_size: int = 30) -> Button:
+	var b := Button.new()
+	b.text = "    " + text
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	b.add_theme_font_size_override("font_size", font_size)
+	b.add_theme_font_override("font", title_font())
+	b.add_theme_color_override("font_color", Color(0.80, 0.78, 0.74))
+	b.add_theme_color_override("font_hover_color", Color(1, 1, 1))
+	b.add_theme_color_override("font_pressed_color", GOLD)
+	b.add_theme_color_override("font_hover_pressed_color", GOLD)
+	b.add_theme_color_override("font_disabled_color", Color(0.30, 0.30, 0.30))
+	var empty := StyleBoxEmpty.new()
+	for st in ["normal", "hover", "pressed", "hover_pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(st, empty)
+	b.mouse_entered.connect(func():
+		if not b.disabled:
+			b.text = ">>  " + text
+			SoundBank.play("hover", -6.0))
+	b.mouse_exited.connect(func(): b.text = "    " + text)
+	b.pressed.connect(func(): SoundBank.play("click", -2.0))
+	return b
+
+
 ## Etiqueta con la fuente decorativa (titulos).
 static func title_label(text: String, font_size: int = 48, color: Color = GOLD, align: HorizontalAlignment = HORIZONTAL_ALIGNMENT_CENTER) -> Label:
 	var l := label(text, font_size, color, align)
@@ -124,46 +151,6 @@ static func deco_panel(bg: Color = Color(0.03, 0.03, 0.035, 0.88)) -> StyleBoxFl
 
 # ------------------------------------------------------------------- dibujo
 
-## Fondo Art Deco animado (abanico dorado, rayos de luz, particulas, marco de esquinas).
-## `t` = tiempo en segundos (para animar); con 0 queda estatico.
-static func draw_deco_background(ci: CanvasItem, tint: Color = GOLD, t: float = 0.0) -> void:
-	ci.draw_rect(Rect2(0, 0, 1280, 720), Color(0.02, 0.02, 0.025))
-	# degradado vertical cálido en la parte baja
-	for k in 12:
-		var a: float = 0.012 * float(k)
-		ci.draw_rect(Rect2(0, 360 + k * 30, 1280, 30), Color(tint.r, tint.g * 0.7, tint.b * 0.3, a))
-	var origin := Vector2(640, 800)
-	for i in range(-16, 17):
-		var wob: float = sin(t * 0.4 + i * 0.7) * 0.02
-		var dir := Vector2(0, -1).rotated(i * 0.105 + wob)
-		var a2: float = 0.055 + 0.03 * sin(t * 0.8 + i)
-		ci.draw_line(origin, origin + dir * 1100.0, Color(tint.r, tint.g, tint.b, a2), 2.0)
-	for k in 5:
-		ci.draw_arc(origin, 240.0 + k * 62.0, PI * 1.1, PI * 1.9, 56, Color(tint.r, tint.g, tint.b, 0.14 - k * 0.012), 2.0)
-	# haz de luz de lampara
-	for k in 5:
-		ci.draw_circle(Vector2(640, 90), 330.0 - k * 55.0, Color(1.0, 0.8, 0.4, 0.012))
-	# particulas de polvo
-	for i in 26:
-		var seed_x: float = fmod(float(i) * 197.3, 1280.0)
-		var y: float = fmod(float(i) * 83.7 + t * (8.0 + (i % 5) * 4.0), 720.0)
-		var x: float = seed_x + sin(t * 0.5 + i) * 14.0
-		ci.draw_circle(Vector2(x, 720.0 - y), 1.2 + float(i % 3) * 0.5, Color(tint.r, tint.g, tint.b, 0.10 + 0.08 * sin(t + i)))
-	# marcos
-	ci.draw_rect(Rect2(24, 24, 1232, 672), Color(tint.r, tint.g, tint.b, 0.40), false, 2.0)
-	ci.draw_rect(Rect2(36, 36, 1208, 648), Color(tint.r, tint.g, tint.b, 0.16), false, 1.0)
-	for c in [Vector2(24, 24), Vector2(1256, 24), Vector2(24, 696), Vector2(1256, 696)]:
-		_corner(ci, c, Vector2(-1.0 if c.x > 600.0 else 1.0, -1.0 if c.y > 300.0 else 1.0), tint)
-
-
-static func _corner(ci: CanvasItem, p: Vector2, dir: Vector2, tint: Color) -> void:
-	var col := Color(tint.r, tint.g, tint.b, 0.9)
-	for k in 3:
-		var o: float = 14.0 + k * 10.0
-		ci.draw_line(p + Vector2(dir.x * o, 0), p + Vector2(0, dir.y * o), col, 2.0)
-	ci.draw_circle(p + dir * 6.0, 3.0, col)
-
-
 ## Separador ornamental: linea con rombo central.
 static func draw_divider(ci: CanvasItem, center: Vector2, width: float, tint: Color = GOLD) -> void:
 	var col := Color(tint.r, tint.g, tint.b, 0.8)
@@ -172,24 +159,3 @@ static func draw_divider(ci: CanvasItem, center: Vector2, width: float, tint: Co
 	ci.draw_colored_polygon(PackedVector2Array([center + Vector2(0, -7), center + Vector2(8, 0), center + Vector2(0, 7), center + Vector2(-8, 0)]), col)
 	ci.draw_circle(center + Vector2(-width * 0.5, 0), 3.0, col)
 	ci.draw_circle(center + Vector2(width * 0.5, 0), 3.0, col)
-
-
-## Logo del juego: abanico dorado detras del titulo "NIGHT SHIFT", subtitulo y letrero de neon.
-static func draw_logo(ci: CanvasItem, center: Vector2, t: float) -> void:
-	var f: Font = title_font()
-	var fan_c := center + Vector2(0, 62)
-	for i in range(-6, 7):
-		var dir := Vector2(0, -1).rotated(i * 0.19)
-		var len: float = 150.0 + (30.0 if i % 2 == 0 else 0.0)
-		ci.draw_line(fan_c, fan_c + dir * len, Color(GOLD.r, GOLD.g, GOLD.b, 0.55), 2.0)
-	for k in 3:
-		ci.draw_arc(fan_c, 60.0 + k * 34.0, PI * 1.12, PI * 1.88, 32, Color(GOLD.r, GOLD.g, GOLD.b, 0.5 - k * 0.1), 2.0)
-	# titulo con sombra y brillo
-	var flick: float = 1.0 if fmod(t, 6.3) > 0.15 else 0.55
-	var title := "NIGHT SHIFT"
-	var sz: int = 86
-	ci.draw_string(f, center + Vector2(-640 + 4, 18 + 4), title, HORIZONTAL_ALIGNMENT_CENTER, 1280.0, sz, Color(0, 0, 0, 0.8))
-	ci.draw_string(f, center + Vector2(-640, 18), title, HORIZONTAL_ALIGNMENT_CENTER, 1280.0, sz, Color(GOLD.r, GOLD.g, GOLD.b, flick))
-	ci.draw_string(f, center + Vector2(-640, 17), title, HORIZONTAL_ALIGNMENT_CENTER, 1280.0, sz, Color(1.0, 0.92, 0.6, 0.18 * flick))
-	draw_divider(ci, center + Vector2(0, 44), 520.0)
-	ci.draw_string(f, center + Vector2(-640, 82), "AT THE GRAND TENEBRIS", HORIZONTAL_ALIGNMENT_CENTER, 1280.0, 26, Color(GOLD_DIM.r + 0.2, GOLD_DIM.g + 0.18, GOLD_DIM.b + 0.1))

@@ -1,6 +1,6 @@
 extends SubViewportContainer
 ## Envoltorio 3D para el sistema de cámaras CCTV.
-## Expone la misma interfaz que camera_view.gd (Control)
+## Es el Control que night.gd usa como vista de camaras (camera_view)
 ## y renderiza en tiempo real las 7 salas 3D con cámaras de seguridad dinámicas.
 
 const CCTV_3D_SCENE = preload("res://scenes/3d/cctv_3d.tscn")
@@ -24,8 +24,11 @@ func _init() -> void:
 
 	sub_viewport = SubViewport.new()
 	sub_viewport.size = Vector2i(1280, 720)
+	# Mundo 3D propio: si no, la oficina y las 7 salas de camaras comparten el mismo
+	# mundo y se ven unas dentro de otras (el Lobby esta en el mismo origen que la oficina).
+	sub_viewport.own_world_3d = true
 	sub_viewport.handle_input_locally = true
-	sub_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	sub_viewport.render_target_update_mode = SubViewport.UPDATE_WHEN_PARENT_VISIBLE   # solo se dibuja la vista que se esta viendo
 	add_child(sub_viewport)
 
 	cctv_instance = CCTV_3D_SCENE.instantiate()

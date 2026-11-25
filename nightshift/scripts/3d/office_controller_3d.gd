@@ -2,8 +2,23 @@ extends Node3D
 ## Controlador del Entorno 3D de la Oficina.
 ## Maneja: Rotación de cámara tipo FNAF, iluminación equilibrada en tiempo real,
 ## luces de puertas (Q/E) con revelado de monstruos en sombra y modelos GLB.
+##
+## Monstruos: se leen con la misma interfaz que usa la version 2D
+## (m.key, m.at_gate_side(), m.vent_rattle()), no con nombres de nodo.
+
+const MonsterFactory = preload("res://scripts/3d/monster_factory_3d.gd")
+
+## Monstruos que pueden aparecer en las rejas de la oficina.
+const GATE_MONSTERS: Array = ["botones", "chef"]
+## Escala por monstruo en la puerta (el gorro del Chef no cabe por el marco).
+const GATE_SCALE: Dictionary = {"botones": 1.0, "chef": 0.93}
+## Cuanto se separa de la reja (z local negativo = hacia el pasillo). El Chef es mas ancho.
+const GATE_BACK: Dictionary = {"botones": 0.0, "chef": -0.28}
 
 var night = null
+
+var _gate_models: Dictionary = {"left": {}, "right": {}}   # lado -> key -> Node3D
+var _vent_model: Node3D = null
 
 # --- Nodos de Cámara y Vista ---
 @onready var camera: Camera3D = $Camera3D
@@ -40,7 +55,7 @@ var target_yaw: float = 0.0
 var target_pitch: float = 0.0
 
 # Posiciones Y para rejas mecánicas (Abierta vs Cerrada)
-const GATE_Y_OPEN: float = 3.2
+const GATE_Y_OPEN: float = 3.75   # los barrotes quedan por encima del marco (antes tapaban la cabeza)
 const GATE_Y_CLOSED: float = 1.15
 var gate_y_left: float = GATE_Y_OPEN
 var gate_y_right: float = GATE_Y_OPEN
@@ -48,6 +63,13 @@ var gate_y_right: float = GATE_Y_OPEN
 
 func _ready() -> void:
 	_setup_props()
+	_setup_door_lights()
+	_fix_lighting()
+	_build_hallways()
+	_build_vent_duct()
+	_build_gate_bars(gate_left)
+	_build_gate_bars(gate_right)
+	_setup_monsters()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -120,21 +142,190 @@ func _process(delta: float) -> void:
 
 
 func _update_monsters_in_office() -> void:
-	var botones_side: String = ""
+	# Quien esta en cada reja (pueden coincidir el Botones y el Chef en el mismo lado).
+	var occupants: Dictionary = {"left": [], "right": []}
+	var rattle: float = 0.0
 	for m in night.monsters:
-		if m.name == "El Botones" and m.stage == 2:
-			botones_side = m.side
-			break
-	
-	monster_left_anchor.visible = (botones_side == "left")
-	monster_right_anchor.visible = (botones_side == "right")
+		var side: String = m.at_gate_side()
+		if occupants.has(side):
+			occupants[side].append(m.key)
+		if m.key == "mucama" and m.has_method("vent_rattle"):
+			rattle = m.vent_rattle()
 
-	var mucama_in_vent: bool = false
-	for m in night.monsters:
-		if m.name == "La Mucama" and m.stage == 2:
-			mucama_in_vent = true
-			break
-	monster_vent_anchor.visible = mucama_in_vent
+	for side in ["left", "right"]:
+		var here: Array = occupants[side]
+		var models: Dictionary = _gate_models[side]
+		for key in models.keys():
+			var model: Node3D = models[key]
+			var idx: int = here.find(key)
+			model.visible = idx >= 0
+			if idx >= 0:
+				# Si hay dos, uno se aparta a un lado y un poco atras.
+				var lateral: float = 0.0
+				if here.size() > 1:
+					lateral = -0.34 if idx == 0 else 0.34
+				model.position = Vector3(lateral, 0.0, float(GATE_BACK.get(key, 0.0)) - 0.15 * idx)
+
+	# La Mucama asoma por la rejilla de ventilacion cuando esta cerca.
+	if _vent_model != null:
+		_vent_model.visible = rattle > 0.0 and not night.blackout
+		if _vent_model.visible:
+			var shake: float = sin(Time.get_ticks_msec() * 0.03) * 0.012 * rattle
+			# Inclinada hacia la rejilla: la cara asoma por el hueco y la falda queda tras el muro.
+			_vent_model.position = Vector3(shake, -1.05, lerpf(-1.3, -1.06, rattle))
+
+
+## Crea los modelos de los monstruos una sola vez y los deja ocultos en sus anclajes.
+func _setup_monsters() -> void:
+	for anchor in [monster_left_anchor, monster_right_anchor, monster_vent_anchor]:
+		_hide_placeholders(anchor)
+		anchor.visible = true   # en la escena vienen ocultos; ahora se controla cada modelo
+
+	for side in ["left", "right"]:
+		var side_anchor: Marker3D = monster_left_anchor if side == "left" else monster_right_anchor
+		for key in GATE_MONSTERS:
+			var model: Node3D = MonsterFactory.create(key)
+			if model == null:
+				continue
+			model.scale = Vector3.ONE * float(GATE_SCALE.get(key, 1.0))
+			model.visible = false
+			side_anchor.add_child(model)
+			MonsterFactory.set_layers(model, MonsterFactory.MONSTER_LAYER)
+			_gate_models[side][key] = model
+
+	_vent_model = MonsterFactory.create("mucama")
+	if _vent_model != null:
+		_vent_model.visible = false
+		_vent_model.rotation = Vector3(deg_to_rad(25.0), 0.0, 0.0)
+		monster_vent_anchor.add_child(_vent_model)
+		MonsterFactory.set_head_pitch(_vent_model, -0.5)
+		MonsterFactory.set_layers(_vent_model, MonsterFactory.MONSTER_LAYER)
+
+	# Las luces de ambiente de la oficina NO tocan a los monstruos: en el pasillo solo
+	# se les ve la silueta y los ojos hasta que enciendes la luz de la puerta (Q / E).
+	for l in [room_light, office_lamp, lamp_bulb, tv_glow]:
+		l.light_cull_mask = l.light_cull_mask & ~MonsterFactory.MONSTER_LAYER
+
+
+## Las luces de puerta venian apuntando hacia dentro de la oficina. Ahora apuntan
+## hacia fuera, al pasillo, donde se para el monstruo.
+func _setup_door_lights() -> void:
+	light_door_left.look_at_from_position(Vector3(-3.55, 2.25, -0.6), Vector3(-4.45, 0.9, -0.6), Vector3.UP)
+	light_door_right.look_at_from_position(Vector3(3.55, 2.25, -0.6), Vector3(4.45, 0.9, -0.6), Vector3.UP)
+
+
+## Ajustes de luz que evitan manchas y rayas en las paredes con el renderer Compatibility.
+func _fix_lighting() -> void:
+	# La luz del techo con sombras omnidireccionales generaba rayas (shadow acne) en las paredes.
+	room_light.shadow_enabled = false
+	# La lampara de escritorio apuntaba a la pared de enfrente (mancha de luz con sombras duras).
+	# Ahora ilumina el escritorio, como una lampara de banquero real.
+	office_lamp.look_at_from_position(office_lamp.position, Vector3(0.25, 0.76, -0.75), Vector3.FORWARD)
+	for l in [office_lamp, light_door_left, light_door_right]:
+		l.shadow_bias = 0.06
+		l.shadow_normal_bias = 1.5
+
+
+## Pasillos detras de cada reja: antes la puerta daba al vacio y el suelo se cortaba.
+## Quedan a oscuras; solo los alumbra la luz de puerta (Q / E).
+func _build_hallways() -> void:
+	var wall_mat: Material = ($Room/WallLeft as CSGBox3D).material
+	var floor_mat: Material = ($Room/Floor as CSGBox3D).material
+	for sx in [-1.0, 1.0]:
+		var hall := Node3D.new()
+		hall.name = "HallwayLeft" if sx < 0.0 else "HallwayRight"
+		add_child(hall)
+		var cx: float = sx * 6.5            # de la cara exterior del muro (x = 4.0) a x = 9.0
+		var cz: float = -0.6                # centro de la puerta
+		# El suelo empieza donde acaba el de la oficina (x = 4.25) para no solaparse con el.
+		_add_box(hall, Vector3(4.75, 0.2, 2.2), Vector3(sx * 6.625, -0.1, cz), floor_mat) # suelo
+		_add_box(hall, Vector3(5.0, 0.2, 2.2), Vector3(cx, 2.7, cz), wall_mat)            # techo
+		_add_box(hall, Vector3(5.0, 2.8, 0.2), Vector3(cx, 1.3, cz - 1.0), wall_mat)      # pared
+		_add_box(hall, Vector3(5.0, 2.8, 0.2), Vector3(cx, 1.3, cz + 1.0), wall_mat)      # pared
+		_add_box(hall, Vector3(0.2, 2.8, 2.2), Vector3(sx * 9.0, 1.3, cz), wall_mat)     # fondo
+		# Luz de emergencia muy tenue al fondo (no ilumina a los monstruos: capa 2 excluida).
+		var exit_light := OmniLight3D.new()
+		exit_light.light_color = Color(0.9, 0.25, 0.15)
+		exit_light.light_energy = 0.25
+		exit_light.omni_range = 3.0
+		exit_light.position = Vector3(sx * 8.6, 2.3, cz)
+		exit_light.light_cull_mask = exit_light.light_cull_mask & ~MonsterFactory.MONSTER_LAYER
+		hall.add_child(exit_light)
+
+
+## Ducto detras de la rejilla de ventilacion de la pared de enfrente (antes era un hueco al vacio).
+func _build_vent_duct() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.22, 0.23, 0.25)
+	mat.metallic = 0.7
+	mat.roughness = 0.45
+	var duct := Node3D.new()
+	duct.name = "VentDuct"
+	add_child(duct)
+	_add_box(duct, Vector3(1.4, 0.1, 1.6), Vector3(0.0, 2.15, -4.8), mat)    # suelo
+	_add_box(duct, Vector3(1.4, 0.1, 1.6), Vector3(0.0, 3.05, -4.8), mat)    # techo
+	_add_box(duct, Vector3(0.1, 1.0, 1.6), Vector3(-0.7, 2.6, -4.8), mat)    # lados
+	_add_box(duct, Vector3(0.1, 1.0, 1.6), Vector3(0.7, 2.6, -4.8), mat)
+	_add_box(duct, Vector3(1.4, 1.0, 0.1), Vector3(0.0, 2.6, -5.6), mat)     # fondo
+	# Lamas de la rejilla
+	for i in 4:
+		_add_box(duct, Vector3(1.2, 0.025, 0.04), Vector3(0.0, 2.3 + i * 0.18, -3.82), mat)
+
+
+func _add_box(parent: Node, size: Vector3, pos: Vector3, mat: Material) -> MeshInstance3D:
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.position = pos
+	parent.add_child(mi)
+	return mi
+
+
+## Sustituye la placa solida de la reja por barrotes de ascensor tipo acordeon,
+## para que se vea al monstruo detras cuando la reja esta cerrada.
+func _build_gate_bars(gate: Node3D) -> void:
+	var mat: Material = null
+	for child in gate.get_children():
+		if child is CSGBox3D:
+			mat = (child as CSGBox3D).material
+			(child as CSGBox3D).visible = false
+
+	var bar_mesh := CylinderMesh.new()
+	bar_mesh.top_radius = 0.018
+	bar_mesh.bottom_radius = 0.018
+	bar_mesh.height = 2.4
+	bar_mesh.radial_segments = 8
+	bar_mesh.rings = 1
+	for i in 11:
+		var bar := MeshInstance3D.new()
+		bar.mesh = bar_mesh
+		bar.material_override = mat
+		bar.position = Vector3(0.0, 0.0, lerpf(-0.72, 0.72, float(i) / 10.0))
+		gate.add_child(bar)
+
+	var rail_mesh := BoxMesh.new()
+	rail_mesh.size = Vector3(0.05, 0.07, 1.5)
+	for y in [-1.15, -0.38, 0.38, 1.15]:
+		var rail := MeshInstance3D.new()
+		rail.mesh = rail_mesh
+		rail.material_override = mat
+		rail.position = Vector3(0.0, y, 0.0)
+		gate.add_child(rail)
+
+	# Tijeras diagonales entre travesanos
+	var diag_mesh := BoxMesh.new()
+	diag_mesh.size = Vector3(0.022, 0.022, 0.8)
+	for yc in [-0.765, 0.0, 0.765]:
+		for k in 5:
+			for sgn in [-1.0, 1.0]:
+				var d := MeshInstance3D.new()
+				d.mesh = diag_mesh
+				d.material_override = mat
+				d.position = Vector3(0.0, yc, lerpf(-0.56, 0.56, float(k) / 4.0))
+				d.rotation = Vector3(sgn * deg_to_rad(58.0), 0.0, 0.0)
+				gate.add_child(d)
 
 
 func _setup_props() -> void:
@@ -181,19 +372,8 @@ func _setup_props() -> void:
 			inst.rotation_degrees = Vector3(0.0, 180.0, 0.0)
 			inst.position = Vector3(0.0, 0.0, 0.0)
 			chair_anchor.add_child(inst)
-
-	# 5. MONSTRUO BOTONES (Si existe)
-	if ResourceLoader.exists("res://assets/3d/monsters/botones.glb"):
-		var bot_scene = load("res://assets/3d/monsters/botones.glb") as PackedScene
-		if bot_scene:
-			_hide_placeholders(monster_left_anchor)
-			_hide_placeholders(monster_right_anchor)
-			var inst_l = bot_scene.instantiate() as Node3D
-			inst_l.scale = Vector3(0.9, 0.9, 0.9)
-			monster_left_anchor.add_child(inst_l)
-			var inst_r = bot_scene.instantiate() as Node3D
-			inst_r.scale = Vector3(0.9, 0.9, 0.9)
-			monster_right_anchor.add_child(inst_r)
+	# Los monstruos se crean en _setup_monsters() con MonsterFactory
+	# (usa assets/3d/monsters/<key>.glb si existe, si no el modelo de primitivas).
 
 
 func _hide_placeholders(anchor: Node) -> void:

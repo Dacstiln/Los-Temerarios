@@ -7,15 +7,12 @@ const Map = preload("res://scripts/map.gd")
 const UIUtil = preload("res://scripts/ui_util.gd")
 const CamState = preload("res://scripts/cam_state.gd")
 const EnergySystem = preload("res://scripts/energy_system.gd")
-const OfficeView2D = preload("res://scripts/office_view.gd")
 const OfficeView3D = preload("res://scripts/3d/office_view_3d.gd")
-const USE_3D_OFFICE: bool = true
-const CameraView2D = preload("res://scripts/camera_view.gd")
 const CameraView3D = preload("res://scripts/3d/camera_view_3d.gd")
-const USE_3D_CCTV: bool = true
 const Hud = preload("res://scripts/hud.gd")
 const PauseMenu = preload("res://scripts/pause_menu.gd")
-const JumpscareView = preload("res://scripts/jumpscare_view.gd")
+const JumpscareView3D = preload("res://scripts/3d/jumpscare_view_3d.gd")
+const NightIntro = preload("res://scripts/night_intro.gd")
 const Botones = preload("res://scripts/monsters/botones.gd")
 const Chef = preload("res://scripts/monsters/chef.gd")
 const Mucama = preload("res://scripts/monsters/mucama.gd")
@@ -88,17 +85,11 @@ func _ready() -> void:
 # ================================================================ construccion
 
 func _build_views() -> void:
-	if USE_3D_OFFICE:
-		office_view = OfficeView3D.new()
-	else:
-		office_view = OfficeView2D.new()
+	office_view = OfficeView3D.new()
 	office_view.night = self
 	add_child(office_view)
 	office_view.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	if USE_3D_CCTV:
-		camera_view = CameraView3D.new()
-	else:
-		camera_view = CameraView2D.new()
+	camera_view = CameraView3D.new()
 	camera_view.night = self
 	camera_view.visible = false
 	add_child(camera_view)
@@ -161,13 +152,7 @@ func _build_hud() -> void:
 	add_child(layer)
 	hud = Hud.new()
 	layer.add_child(hud)
-	hud.gate_pressed.connect(toggle_gate)
-	hud.monitor_pressed.connect(toggle_monitor)
 	hud.cam_selected.connect(select_cam)
-	hud.flash_pressed.connect(do_flash)
-	hud.intercom_pressed.connect(do_intercom)
-	hud.boiler_pressed.connect(do_boiler)
-	hud.wind_pressed.connect(do_wind)
 	hud.set_night_text(String(cfg["title"]))
 	hud.set_features(bool(cfg.get("intercom", false)), bool(cfg.get("boiler", false)), box_enabled)
 	hud.set_cam(current_cam)
@@ -183,43 +168,15 @@ func _show_intro() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 30
 	add_child(layer)
-	intro_overlay = Control.new()
-	layer.add_child(intro_overlay)
-	intro_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var bg := ColorRect.new()
-	bg.color = Color(0, 0, 0, 1)
-	intro_overlay.add_child(bg)
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var title := UIUtil.title_label(String(cfg["title"]), 72, UIUtil.GOLD, HORIZONTAL_ALIGNMENT_CENTER)
-	title.position = Vector2(0, 190)
-	title.size = Vector2(1280, 90)
-	intro_overlay.add_child(title)
-	var clock := UIUtil.label("12:00 AM", 40, UIUtil.GOLD_DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	clock.position = Vector2(0, 285)
-	clock.size = Vector2(1280, 54)
-	intro_overlay.add_child(clock)
-	var sub := UIUtil.label(String(cfg["subtitle"]), 24, Color(0.8, 0.8, 0.75), HORIZONTAL_ALIGNMENT_CENTER)
-	sub.position = Vector2(0, 360)
-	sub.size = Vector2(1280, 34)
-	intro_overlay.add_child(sub)
-	var hint := UIUtil.label(String(cfg["hint"]), 18, Color(0.6, 0.6, 0.58), HORIZONTAL_ALIGNMENT_CENTER)
-	hint.position = Vector2(140, 430)
-	hint.size = Vector2(1000, 80)
-	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro_overlay.add_child(hint)
-	for ly in [172.0, 520.0]:
-		var line := ColorRect.new()
-		line.color = Color(UIUtil.GOLD.r, UIUtil.GOLD.g, UIUtil.GOLD.b, 0.55)
-		line.position = Vector2(340, ly)
-		line.size = Vector2(600, 2)
-		intro_overlay.add_child(line)
-	var skip := UIUtil.label("(cualquier tecla para empezar)", 14, UIUtil.GOLD_DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	skip.position = Vector2(0, 650)
-	skip.size = Vector2(1280, 22)
-	intro_overlay.add_child(skip)
+	# Tarjeta animada: reloj a medianoche, titulo, pista y amenazas de la noche (night_intro.gd)
+	var card := NightIntro.new()
+	card.setup(cfg, night)
+	intro_overlay = card
+	layer.add_child(card)
+	card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 
 	intro_tween = create_tween()
-	intro_tween.tween_interval(4.5)
+	intro_tween.tween_interval(6.5)
 	intro_tween.tween_callback(_begin)
 
 
@@ -353,21 +310,18 @@ func toggle_door_light(side: String) -> void:
 	if not started or is_over or blackout:
 		return
 	door_light[side] = not door_light.get(side, false)
-	if hud.has_method("set_door_light"):
-		hud.set_door_light(side, door_light[side])
+	hud.set_door_light(side, door_light[side])
 	SoundBank.play("click", -1.0, 1.25 if door_light[side] else 0.85)
 
 
 func set_door_light(side: String, active: bool) -> void:
 	if not started or is_over or blackout:
 		door_light[side] = false
-		if hud.has_method("set_door_light"):
-			hud.set_door_light(side, false)
+		hud.set_door_light(side, false)
 		return
 	if door_light.get(side, false) != active:
 		door_light[side] = active
-		if hud.has_method("set_door_light"):
-			hud.set_door_light(side, active)
+		hud.set_door_light(side, active)
 		if active:
 			SoundBank.play("click", -1.0, 1.25)
 
@@ -651,9 +605,8 @@ func _on_depleted() -> void:
 	gate_closed["right"] = false
 	door_light["left"] = false
 	door_light["right"] = false
-	if hud.has_method("set_door_light"):
-		hud.set_door_light("left", false)
-		hud.set_door_light("right", false)
+	hud.set_door_light("left", false)
+	hud.set_door_light("right", false)
 	monitor_up = false
 	energy.monitor_up = false
 	camera_view.visible = false
@@ -708,8 +661,10 @@ func _on_jumpscare(m, reason: String) -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 40
 	add_child(layer)
-	var js := JumpscareView.new()
+	# El jumpscare usa los modelos 3D (una coreografia por monstruo).
+	var js = JumpscareView3D.new()
 	js.kind = m.key
+	js.side = m.at_gate_side()
 	layer.add_child(js)
 	js.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var tw := create_tween()
@@ -719,7 +674,18 @@ func _on_jumpscare(m, reason: String) -> void:
 
 func _goto_result() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/result.tscn")
+	# Fundido a negro antes de la pantalla de resultado
+	var layer := CanvasLayer.new()
+	layer.layer = 60
+	add_child(layer)
+	var fade := ColorRect.new()
+	fade.color = Color(0, 0, 0, 0)
+	fade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(fade)
+	fade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var tw := create_tween()
+	tw.tween_property(fade, "color:a", 1.0, 0.45)
+	tw.tween_callback(func(): get_tree().change_scene_to_file("res://scenes/result.tscn"))
 
 
 # ================================================================== entrada

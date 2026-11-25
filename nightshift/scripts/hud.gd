@@ -3,13 +3,7 @@ extends Control
 ## Todos los elementos integrados dentro del encuadre de la pantalla (FEED).
 ## Los textos guía inferiores y laterales son difuminados, sin recuadros y no interactivos.
 
-signal gate_pressed(side: String)
-signal monitor_pressed
 signal cam_selected(id: int)
-signal flash_pressed
-signal intercom_pressed
-signal boiler_pressed
-signal wind_pressed
 
 const UIUtil = preload("res://scripts/ui_util.gd")
 const Map = preload("res://scripts/map.gd")
@@ -34,9 +28,6 @@ var map_panel: MapBlueprint
 var cam_btns: Dictionary:
 	get:
 		return map_panel.cam_btns if map_panel != null else {}
-var cam_title: Label:
-	get:
-		return map_panel.title_label if map_panel != null else null
 
 var box_label: Label
 var box_bg: ColorRect
