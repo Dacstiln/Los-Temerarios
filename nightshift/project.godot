@@ -17,6 +17,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 config/name="Night Shift at The Grand Tenebris"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.02, 0.02, 0.024, 1)
+boot_splash/image="res://assets/ui/boot_splash.png"
 config/icon="res://icon.svg"
 
 [autoload]
@@ -34,3 +36,4 @@ window/stretch/mode="canvas_items"
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

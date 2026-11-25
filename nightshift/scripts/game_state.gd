@@ -36,8 +36,17 @@ func reset_progress() -> void:
 
 func start_night(n: int) -> void:
 	current_night = clampi(n, 1, MAX_NIGHT)
+	goto_scene("res://scenes/night.tscn")
+
+
+func goto_menu() -> void:
+	goto_scene("res://scenes/main_menu.tscn")
+
+
+## Cambia de escena directamente (sin pantalla de carga).
+func goto_scene(path: String) -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/night.tscn")
+	get_tree().change_scene_to_file(path)
 
 
 func night_config(n: int = -1) -> Dictionary:

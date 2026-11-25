@@ -18,12 +18,12 @@ func _ready() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	center.add_child(box)
-	box.add_child(UIUtil.title_label("PAUSA", 52, UIUtil.GOLD, HORIZONTAL_ALIGNMENT_CENTER))
-	var resume := UIUtil.menu_button("CONTINUAR  [ESC]", 22)
+	box.add_child(UIUtil.title_label("PAUSA", 52, Color(0.9, 0.88, 0.82), HORIZONTAL_ALIGNMENT_LEFT))
+	var resume := UIUtil.fnaf_button("CONTINUAR  [ESC]", 22)
 	resume.custom_minimum_size = Vector2(320, 52)
 	resume.pressed.connect(close)
 	box.add_child(resume)
-	var menu := UIUtil.menu_button("MENÚ PRINCIPAL", 22)
+	var menu := UIUtil.fnaf_button("MENÚ PRINCIPAL", 22)
 	menu.custom_minimum_size = Vector2(320, 52)
 	menu.pressed.connect(_to_menu)
 	box.add_child(menu)
@@ -45,7 +45,7 @@ func _to_menu() -> void:
 	SoundBank.stop_all_loops()
 	SoundBank.set_paused(false)
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/main_menu.tscn")
+	GameState.goto_menu()
 
 
 func _input(event: InputEvent) -> void:

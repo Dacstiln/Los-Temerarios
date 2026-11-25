@@ -1,0 +1,662 @@
+[gd_scene load_steps=52 format=3]
+
+[ext_resource type="Script" path="res://scripts/3d/monster_rig_3d.gd" id="1_rig"]
+
+[sub_resource type="StandardMaterial3D" id="mat_suit"]
+resource_name = "suit"
+albedo_color = Color(0.035, 0.035, 0.05, 1)
+metallic = 0
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="mat_shoe"]
+resource_name = "shoe"
+albedo_color = Color(0.025, 0.022, 0.022, 1)
+metallic = 0
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="mat_waistcoat"]
+resource_name = "waistcoat"
+albedo_color = Color(0.4, 0.3, 0.09, 1)
+metallic = 0.2
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="mat_shirt"]
+resource_name = "shirt"
+albedo_color = Color(0.84, 0.83, 0.79, 1)
+metallic = 0
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="mat_suit_hi"]
+resource_name = "suit_hi"
+albedo_color = Color(0.11, 0.11, 0.15, 1)
+metallic = 0
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="mat_gold"]
+resource_name = "gold"
+albedo_color = Color(0.83, 0.66, 0.24, 1)
+metallic = 0.85
+roughness = 0.32
+
+[sub_resource type="StandardMaterial3D" id="mat_watch"]
+resource_name = "watch"
+albedo_color = Color(0.9, 0.74, 0.3, 1)
+metallic = 0.9
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.82, 0.35, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="mat_skin"]
+resource_name = "skin"
+albedo_color = Color(0.7, 0.68, 0.6, 1)
+metallic = 0
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="mat_ebony"]
+resource_name = "ebony"
+albedo_color = Color(0.04, 0.025, 0.02, 1)
+metallic = 0
+roughness = 0.18
+
+[sub_resource type="StandardMaterial3D" id="mat_socket"]
+resource_name = "socket"
+albedo_color = Color(0.015, 0.008, 0.008, 1)
+metallic = 0
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="mat_eye"]
+resource_local_to_scene = true
+resource_name = "eye"
+albedo_color = Color(1, 0.8, 0.22, 1)
+metallic = 0
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.8, 0.22, 1)
+emission_energy_multiplier = 3
+
+[sub_resource type="StandardMaterial3D" id="mat_hair"]
+resource_name = "hair"
+albedo_color = Color(0.55, 0.55, 0.57, 1)
+metallic = 0
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="mat_mouth"]
+resource_name = "mouth"
+albedo_color = Color(0.12, 0.04, 0.04, 1)
+metallic = 0
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="mat_hatband"]
+resource_name = "hatband"
+albedo_color = Color(0.32, 0.03, 0.05, 1)
+metallic = 0
+roughness = 0.5
+
+[sub_resource type="CapsuleMesh" id="mesh_1"]
+radius = 0.062
+height = 1.02
+radial_segments = 16
+rings = 6
+
+[sub_resource type="BoxMesh" id="mesh_2"]
+size = Vector3(0.095, 0.07, 0.29)
+
+[sub_resource type="PrismMesh" id="mesh_3"]
+size = Vector3(0.095, 0.08, 0.07)
+
+[sub_resource type="CylinderMesh" id="mesh_4"]
+top_radius = 0.205
+bottom_radius = 0.15
+height = 0.62
+radial_segments = 18
+rings = 1
+
+[sub_resource type="BoxMesh" id="mesh_5"]
+size = Vector3(0.15, 0.36, 0.02)
+
+[sub_resource type="BoxMesh" id="mesh_6"]
+size = Vector3(0.07, 0.14, 0.02)
+
+[sub_resource type="BoxMesh" id="mesh_7"]
+size = Vector3(0.05, 0.32, 0.015)
+
+[sub_resource type="PrismMesh" id="mesh_8"]
+size = Vector3(0.05, 0.045, 0.02)
+
+[sub_resource type="BoxMesh" id="mesh_9"]
+size = Vector3(0.12, 0.52, 0.03)
+
+[sub_resource type="PrismMesh" id="mesh_10"]
+size = Vector3(0.12, 0.12, 0.03)
+
+[sub_resource type="SphereMesh" id="mesh_11"]
+radius = 0.08
+height = 0.16
+radial_segments = 12
+rings = 8
+
+[sub_resource type="SphereMesh" id="mesh_12"]
+radius = 0.011
+height = 0.022
+radial_segments = 8
+rings = 6
+
+[sub_resource type="CylinderMesh" id="mesh_13"]
+top_radius = 0.004
+bottom_radius = 0.004
+height = 0.13
+radial_segments = 6
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_14"]
+top_radius = 0.03
+bottom_radius = 0.03
+height = 0.012
+radial_segments = 14
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_15"]
+top_radius = 0.055
+bottom_radius = 0.066
+height = 0.07
+radial_segments = 12
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_16"]
+top_radius = 0.034
+bottom_radius = 0.034
+height = 0.1
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_17"]
+top_radius = 0.014
+bottom_radius = 0.014
+height = 0.66
+radial_segments = 8
+rings = 1
+
+[sub_resource type="SphereMesh" id="mesh_18"]
+radius = 0.032
+height = 0.064
+radial_segments = 10
+rings = 8
+
+[sub_resource type="CapsuleMesh" id="mesh_19"]
+radius = 0.05
+height = 0.46
+radial_segments = 16
+rings = 6
+
+[sub_resource type="CapsuleMesh" id="mesh_20"]
+radius = 0.045
+height = 0.42
+radial_segments = 16
+rings = 6
+
+[sub_resource type="CylinderMesh" id="mesh_21"]
+top_radius = 0.048
+bottom_radius = 0.048
+height = 0.04
+radial_segments = 10
+rings = 1
+
+[sub_resource type="SphereMesh" id="mesh_22"]
+radius = 0.045
+height = 0.09
+radial_segments = 10
+rings = 8
+
+[sub_resource type="CapsuleMesh" id="mesh_23"]
+radius = 0.008
+height = 0.1245
+radial_segments = 16
+rings = 6
+
+[sub_resource type="CapsuleMesh" id="mesh_24"]
+radius = 0.008
+height = 0.15
+radial_segments = 16
+rings = 6
+
+[sub_resource type="SphereMesh" id="mesh_25"]
+radius = 1
+height = 2
+radial_segments = 16
+rings = 12
+
+[sub_resource type="SphereMesh" id="mesh_26"]
+radius = 0.027
+height = 0.054
+radial_segments = 12
+rings = 8
+
+[sub_resource type="SphereMesh" id="mesh_27"]
+radius = 0.016
+height = 0.032
+radial_segments = 12
+rings = 8
+
+[sub_resource type="TorusMesh" id="mesh_28"]
+inner_radius = 0.025
+outer_radius = 0.033
+rings = 24
+ring_segments = 8
+
+[sub_resource type="CylinderMesh" id="mesh_29"]
+top_radius = 0.003
+bottom_radius = 0.003
+height = 0.16
+radial_segments = 6
+rings = 1
+
+[sub_resource type="BoxMesh" id="mesh_30"]
+size = Vector3(0.05, 0.012, 0.012)
+
+[sub_resource type="BoxMesh" id="mesh_31"]
+size = Vector3(0.018, 0.08, 0.04)
+
+[sub_resource type="BoxMesh" id="mesh_32"]
+size = Vector3(0.04, 0.005, 0.006)
+
+[sub_resource type="SphereMesh" id="mesh_33"]
+radius = 0.014
+height = 0.028
+radial_segments = 8
+rings = 6
+
+[sub_resource type="CylinderMesh" id="mesh_34"]
+top_radius = 0.17
+bottom_radius = 0.17
+height = 0.014
+radial_segments = 20
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_35"]
+top_radius = 0.099
+bottom_radius = 0.099
+height = 0.04
+radial_segments = 18
+rings = 1
+
+[sub_resource type="CylinderMesh" id="mesh_36"]
+top_radius = 0.1
+bottom_radius = 0.095
+height = 0.31
+radial_segments = 18
+rings = 1
+
+[node name="Cornelius" type="Node3D"]
+script = ExtResource("1_rig")
+breathe = 0.006
+sway_deg = 0.8
+twitch = 0.35
+eye_color = Color(1, 0.8, 0.22, 1)
+eye_energy = 3
+
+[node name="Body" type="Node3D" parent="."]
+
+[node name="LegL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.53, 0)
+mesh = SubResource("mesh_1")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="ShoeL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.085, 0.035, 0.055)
+mesh = SubResource("mesh_2")
+surface_material_override/0 = SubResource("mat_shoe")
+cast_shadow = 1
+
+[node name="ToeL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.085, 0.035, 0.225)
+mesh = SubResource("mesh_3")
+surface_material_override/0 = SubResource("mat_shoe")
+cast_shadow = 1
+
+[node name="LegR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.085, 0.53, 0)
+mesh = SubResource("mesh_1")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="ShoeR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.085, 0.035, 0.055)
+mesh = SubResource("mesh_2")
+surface_material_override/0 = SubResource("mat_shoe")
+cast_shadow = 1
+
+[node name="ToeR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -0.085, 0.035, 0.225)
+mesh = SubResource("mesh_3")
+surface_material_override/0 = SubResource("mat_shoe")
+cast_shadow = 1
+
+[node name="Coat" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.6, 0, 1.25, 0)
+mesh = SubResource("mesh_4")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="Waistcoat" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0.1)
+mesh = SubResource("mesh_5")
+surface_material_override/0 = SubResource("mat_waistcoat")
+cast_shadow = 1
+
+[node name="ShirtV" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.44, 0.108)
+mesh = SubResource("mesh_6")
+surface_material_override/0 = SubResource("mat_shirt")
+cast_shadow = 1
+
+[node name="LapelL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(0.97815, -0.20791, 0, 0.20791, 0.97815, 0, 0, 0, 1, 0.075, 1.36, 0.11)
+mesh = SubResource("mesh_7")
+surface_material_override/0 = SubResource("mat_suit_hi")
+cast_shadow = 1
+
+[node name="BowL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.025, 1.5, 0.118)
+mesh = SubResource("mesh_8")
+surface_material_override/0 = SubResource("mat_suit_hi")
+cast_shadow = 1
+
+[node name="TailL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0.99452, -0.10453, 0, 0.10453, 0.99452, 0.065, 0.75, -0.085)
+mesh = SubResource("mesh_9")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="TailTipL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(-1, 0, 0, 0, -0.99452, -0.10453, 0, -0.10453, 0.99452, 0.065, 0.44, -0.12)
+mesh = SubResource("mesh_10")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="ShoulderL" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1.3, 0, 0, 0, 0.75, 0, 0, 0, 1, 0.19, 1.52, 0)
+mesh = SubResource("mesh_11")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="LapelR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(0.97815, 0.20791, 0, -0.20791, 0.97815, 0, 0, 0, 1, -0.075, 1.36, 0.11)
+mesh = SubResource("mesh_7")
+surface_material_override/0 = SubResource("mat_suit_hi")
+cast_shadow = 1
+
+[node name="BowR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, -0.025, 1.5, 0.118)
+mesh = SubResource("mesh_8")
+surface_material_override/0 = SubResource("mat_suit_hi")
+cast_shadow = 1
+
+[node name="TailR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0.99452, -0.10453, 0, 0.10453, 0.99452, -0.065, 0.75, -0.085)
+mesh = SubResource("mesh_9")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="TailTipR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(-1, 0, 0, 0, -0.99452, -0.10453, 0, -0.10453, 0.99452, -0.065, 0.44, -0.12)
+mesh = SubResource("mesh_10")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="ShoulderR" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1.3, 0, 0, 0, 0.75, 0, 0, 0, 1, -0.19, 1.52, 0)
+mesh = SubResource("mesh_11")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="WButton0" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0.112)
+mesh = SubResource("mesh_12")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="WButton1" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0.112)
+mesh = SubResource("mesh_12")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="WButton2" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.26, 0.112)
+mesh = SubResource("mesh_12")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="Chain" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(0.34202, -0.93969, 0, 0.93969, 0.34202, 0, 0, 0, 1, 0.045, 1.13, 0.113)
+mesh = SubResource("mesh_13")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="Watch" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.11, 1.105, 0.118)
+mesh = SubResource("mesh_14")
+surface_material_override/0 = SubResource("mat_watch")
+cast_shadow = 1
+
+[node name="HighCollar" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.565, 0)
+mesh = SubResource("mesh_15")
+surface_material_override/0 = SubResource("mat_shirt")
+cast_shadow = 1
+
+[node name="Neck" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+mesh = SubResource("mesh_16")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Cane" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.235, 0.33, 0.17)
+mesh = SubResource("mesh_17")
+surface_material_override/0 = SubResource("mat_ebony")
+cast_shadow = 1
+
+[node name="CaneKnob" type="MeshInstance3D" parent="Body"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.235, 0.675, 0.17)
+mesh = SubResource("mesh_18")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="ArmL" type="Node3D" parent="Body"]
+transform = Transform3D(0.99863, -0.05234, 0, 0.0523, 0.99802, 0.0349, -0.00183, -0.03485, 0.99939, 0.225, 1.5, 0)
+
+[node name="Upper" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
+mesh = SubResource("mesh_19")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="Fore" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0.02)
+mesh = SubResource("mesh_20")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="Cuff" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.79, 0.025)
+mesh = SubResource("mesh_21")
+surface_material_override/0 = SubResource("mat_shirt")
+cast_shadow = 1
+
+[node name="Hand" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(0.8, 0, 0, 0, 1.4, 0, 0, 0, 0.6, 0, -0.86, 0.03)
+mesh = SubResource("mesh_22")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger0" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017, -0.96, 0.03)
+mesh = SubResource("mesh_23")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger1" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.96, 0.03)
+mesh = SubResource("mesh_24")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger2" type="MeshInstance3D" parent="Body/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.017, -0.96, 0.03)
+mesh = SubResource("mesh_23")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="ArmR" type="Node3D" parent="Body"]
+transform = Transform3D(0.99863, 0.05234, 0, -0.05078, 0.96897, 0.24192, 0.01266, -0.24159, 0.9703, -0.225, 1.5, 0)
+
+[node name="Upper" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0)
+mesh = SubResource("mesh_19")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="Fore" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0.02)
+mesh = SubResource("mesh_20")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="Cuff" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.79, 0.025)
+mesh = SubResource("mesh_21")
+surface_material_override/0 = SubResource("mat_shirt")
+cast_shadow = 1
+
+[node name="Hand" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(0.8, 0, 0, 0, 1.4, 0, 0, 0, 0.6, 0, -0.86, 0.03)
+mesh = SubResource("mesh_22")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger0" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017, -0.96, 0.03)
+mesh = SubResource("mesh_23")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger1" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.96, 0.03)
+mesh = SubResource("mesh_24")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Finger2" type="MeshInstance3D" parent="Body/ArmR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.017, -0.96, 0.03)
+mesh = SubResource("mesh_23")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Head" type="Node3D" parent="Body"]
+transform = Transform3D(0.99756, -0.06976, 0, 0.06966, 0.9962, 0.05234, -0.00365, -0.05221, 0.99863, 0, 1.64, 0)
+
+[node name="Face" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(0.085, 0, 0, 0, 0.13, 0, 0, 0, 0.09, 0, 0.13, 0)
+mesh = SubResource("mesh_25")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="SocketL" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 0.5, 0.036, 0.17, 0.07068)
+mesh = SubResource("mesh_26")
+surface_material_override/0 = SubResource("mat_socket")
+cast_shadow = 1
+
+[node name="EyeL" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.036, 0.17, 0.07676)
+mesh = SubResource("mesh_27")
+surface_material_override/0 = SubResource("mat_eye")
+cast_shadow = 1
+
+[node name="SocketR" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 0.5, -0.036, 0.17, 0.07068)
+mesh = SubResource("mesh_26")
+surface_material_override/0 = SubResource("mat_socket")
+cast_shadow = 1
+
+[node name="EyeR" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.036, 0.17, 0.07676)
+mesh = SubResource("mesh_27")
+surface_material_override/0 = SubResource("mat_eye")
+cast_shadow = 1
+
+[node name="Monocle" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, -0.036, 0.17, 0.08468)
+mesh = SubResource("mesh_28")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="MonocleChain" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(0.93969, -0.34202, 0, 0.33037, 0.90767, -0.25882, 0.08852, 0.24321, 0.96593, -0.07, 0.1, 0.06)
+mesh = SubResource("mesh_29")
+surface_material_override/0 = SubResource("mat_gold")
+cast_shadow = 1
+
+[node name="MoustacheL" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(0.95106, 0.30902, 0, -0.30902, 0.95106, 0, 0, 0, 1, 0.026, 0.07, 0.07894)
+mesh = SubResource("mesh_30")
+surface_material_override/0 = SubResource("mat_hair")
+cast_shadow = 1
+
+[node name="SideburnL" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.14, 0)
+mesh = SubResource("mesh_31")
+surface_material_override/0 = SubResource("mat_hair")
+cast_shadow = 1
+
+[node name="MoustacheR" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(0.95106, -0.30902, 0, 0.30902, 0.95106, 0, 0, 0, 1, -0.026, 0.07, 0.07894)
+mesh = SubResource("mesh_30")
+surface_material_override/0 = SubResource("mat_hair")
+cast_shadow = 1
+
+[node name="SideburnR" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.14, 0)
+mesh = SubResource("mesh_31")
+surface_material_override/0 = SubResource("mat_hair")
+cast_shadow = 1
+
+[node name="Mouth" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.0701)
+mesh = SubResource("mesh_32")
+surface_material_override/0 = SubResource("mat_mouth")
+cast_shadow = 1
+
+[node name="Nose" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1.6, 0, 0, 0, 1, 0, 0.11, 0.09293)
+mesh = SubResource("mesh_33")
+surface_material_override/0 = SubResource("mat_skin")
+cast_shadow = 1
+
+[node name="Brim" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.27, 0)
+mesh = SubResource("mesh_34")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="HatBand" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.297, 0)
+mesh = SubResource("mesh_35")
+surface_material_override/0 = SubResource("mat_hatband")
+cast_shadow = 1
+
+[node name="Crown" type="MeshInstance3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43, 0)
+mesh = SubResource("mesh_36")
+surface_material_override/0 = SubResource("mat_suit")
+cast_shadow = 1
+
+[node name="EyeLight" type="OmniLight3D" parent="Body/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0.16)
+light_color = Color(1, 0.8, 0.3, 1)
+light_energy = 0.3
+omni_range = 0.45
+omni_attenuation = 2.0

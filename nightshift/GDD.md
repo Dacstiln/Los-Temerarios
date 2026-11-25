@@ -1,4 +1,4 @@
-# Implementación del GDD v1 en Godot 4.3 (GDScript)
+# Implementación del GDD v1 en Godot 4.7 (GDScript, renderer GL Compatibility)
 
 **Mecánicas:**
 - Energía compartida como recurso central; a 0% ocurre el Apagón (derrota).

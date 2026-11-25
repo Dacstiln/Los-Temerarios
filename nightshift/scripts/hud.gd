@@ -3,13 +3,7 @@ extends Control
 ## Todos los elementos integrados dentro del encuadre de la pantalla (FEED).
 ## Los textos guía inferiores y laterales son difuminados, sin recuadros y no interactivos.
 
-signal gate_pressed(side: String)
-signal monitor_pressed
 signal cam_selected(id: int)
-signal flash_pressed
-signal intercom_pressed
-signal boiler_pressed
-signal wind_pressed
 
 const UIUtil = preload("res://scripts/ui_util.gd")
 const Map = preload("res://scripts/map.gd")
@@ -20,6 +14,7 @@ var clock_label: Label
 var night_label: Label
 var usage_segs: Array = []
 var gate_btn: Dictionary = {}
+var door_light_btn: Dictionary = {}
 var monitor_btn: TextGuide
 
 # Acciones difuminadas no interactivas (solo texto guía sin recuadro)
@@ -33,9 +28,6 @@ var map_panel: MapBlueprint
 var cam_btns: Dictionary:
 	get:
 		return map_panel.cam_btns if map_panel != null else {}
-var cam_title: Label:
-	get:
-		return map_panel.title_label if map_panel != null else null
 
 var box_label: Label
 var box_bg: ColorRect
@@ -440,7 +432,12 @@ func _build_top() -> void:
 
 
 func _build_bottom() -> void:
-	# Textos guía inferiores difuminados y sin recuadro (dentro de FEED, y = 652..682)
+	# Textos guía inferiores difuminados y sin recuadro (dentro de FEED, y = 618..682)
+	var dl := TextGuide.new("LUZ IZQ  [Q]")
+	dl.position = Vector2(50, 618)
+	add_child(dl)
+	door_light_btn["left"] = dl
+
 	var gl := TextGuide.new("REJA IZQ  [A]")
 	gl.position = Vector2(50, 652)
 	add_child(gl)
@@ -449,6 +446,11 @@ func _build_bottom() -> void:
 	monitor_btn = TextGuide.new("MONITOR  [ESPACIO]")
 	monitor_btn.position = Vector2(525, 652)
 	add_child(monitor_btn)
+
+	var dr := TextGuide.new("LUZ DER  [E]")
+	dr.position = Vector2(1230 - 230, 618)
+	add_child(dr)
+	door_light_btn["right"] = dr
 
 	var gr := TextGuide.new("REJA DER  [D]")
 	gr.position = Vector2(1230 - 230, 652)
@@ -547,7 +549,13 @@ func set_monitor(up: bool) -> void:
 
 
 func set_gate(side: String, closed: bool) -> void:
-	gate_btn[side].set_pressed_no_signal(closed)
+	if gate_btn.has(side):
+		gate_btn[side].set_pressed_no_signal(closed)
+
+
+func set_door_light(side: String, active: bool) -> void:
+	if door_light_btn.has(side):
+		door_light_btn[side].set_pressed_no_signal(active)
 
 
 func set_cam(id: int) -> void:
@@ -566,6 +574,9 @@ func set_intercom_active(cam: int) -> void:
 func set_blackout(on: bool) -> void:
 	for side in gate_btn.keys():
 		gate_btn[side].disabled = on
+	for side in door_light_btn.keys():
+		door_light_btn[side].disabled = on
+		door_light_btn[side].set_pressed_no_signal(false)
 	monitor_btn.disabled = on
 	flash_btn.disabled = on or not monitor_btn.button_pressed
 	intercom_btn.disabled = on or not monitor_btn.button_pressed

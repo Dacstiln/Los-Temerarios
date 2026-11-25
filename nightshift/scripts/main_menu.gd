@@ -4,10 +4,10 @@ extends Control
 ##   JUGAR   (nuevo juego / continuar / seleccionar noche)
 ##   CONTROLES y CONFIGURACION
 ## Todo se construye por codigo; no hace falta tocar main_menu.tscn.
+## Fondo: escenario 3D al estilo FNAF 1 (stage_3d.gd) con los monstruos en la penumbra.
 
 const UIUtil = preload("res://scripts/ui_util.gd")
-const Figures = preload("res://scripts/figures.gd")
-const Balance = preload("res://scripts/balance.gd")
+const Stage3D = preload("res://scripts/3d/stage_3d.gd")
 
 const NIGHT_INFO: Array = [
 	"Solo el Botones",
@@ -24,21 +24,12 @@ var _page: int = Page.TITLE
 var _t: float = 0.0
 var _confirm: Control = null
 var _theme_started: bool = false
+var _stage = null           # stage_3d.gd (sin tipo: tiene propiedades propias)
 
 
 func _draw() -> void:
-	UIUtil.draw_deco_background(self, UIUtil.GOLD, _t)
-	# Personajes a los lados (siluetas con ojos brillantes que parpadean).
-	var blink: float = 0.0 if fmod(_t, 4.7) > 0.12 else 1.0
-	var sway: float = sin(_t * 0.9) * 2.0
-	if _page == Page.TITLE or _page == Page.PLAY:
-		Figures.draw_figure(self, "botones", Vector2(170 + sway, 705), 1.55, 0.42 + blink * 0.4)
-		Figures.draw_figure(self, "chef", Vector2(330 - sway, 705), 1.5, 0.42 + blink * 0.4)
-		Figures.draw_figure(self, "mucama", Vector2(950 + sway, 705), 1.55, 0.42 + blink * 0.4)
-		Figures.draw_figure(self, "cornelius", Vector2(1110 - sway, 705), 1.5, 0.42 + blink * 0.4)
-	if _page == Page.TITLE:
-		UIUtil.draw_logo(self, Vector2(640, 130), _t)
-	# Letrero de neon "GRAND TENEBRIS" que parpadea
+	# El fondo es el escenario 3D (va en un CanvasLayer por detras). Aqui solo el letrero
+	# de neon de las paginas interiores.
 	if _page != Page.TITLE:
 		var f: Font = UIUtil.title_font()
 		var neon: float = 1.0 if fmod(_t, 7.3) > 0.2 else 0.4
@@ -48,16 +39,24 @@ func _draw() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _stage != null:
+		# En las paginas con paneles el fondo se oscurece para que se lea bien.
+		var target: float = 0.0 if _page == Page.TITLE else 0.62
+		_stage.darkness = move_toward(_stage.darkness, target, delta * 2.5)
 	queue_redraw()
 
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	SoundBank.stop_all_loops()
+	var all: Array = ["botones", "chef", "mucama", "cornelius", "bailarina"]
+	all.shuffle()
+	_stage = Stage3D.attach(self, {"kinds": all, "focus_x": 0.7})
 	_build_title()
 	_build_play()
 	_build_controls()
 	_build_settings()
+	move_child(_confirm, -1)   # la confirmacion siempre por encima de las paginas
 	_show(Page.TITLE)
 	# La musica del menu se sintetiza un instante despues de mostrar la portada.
 	get_tree().create_timer(0.15).timeout.connect(_start_theme)
@@ -108,15 +107,35 @@ func _btn(parent: Control, text: String, size: int, w: float, h: float, cb: Call
 
 func _build_title() -> void:
 	var page: Control = _new_page(Page.TITLE)
-	var col: VBoxContainer = _column(page, 490, 330, 300, 14)
-	_btn(col, "JUGAR", 24, 300, 56, func(): _show(Page.PLAY))
-	_btn(col, "CONFIGURACIÓN", 22, 300, 52, func(): _show(Page.SETTINGS))
-	_btn(col, "CONTROLES", 22, 300, 52, func(): _show(Page.CONTROLS))
-	_btn(col, "SALIR", 22, 300, 52, func(): get_tree().quit())
-	var credit := UIUtil.label("Universidad de Colima · Facultad de Telemática\nIngeniería de Software — Videojuegos · GDD v1", 13, UIUtil.GOLD_DIM, HORIZONTAL_ALIGNMENT_CENTER)
-	credit.position = Vector2(340, 648)
-	credit.size = Vector2(600, 40)
+	# Titulo apilado a la izquierda, como en FNAF 1
+	var title := UIUtil.title_label("Night\nShift\nat the Grand\nTenebris", 54, Color(0.88, 0.86, 0.80), HORIZONTAL_ALIGNMENT_LEFT)
+	title.position = Vector2(78, 56)
+	title.size = Vector2(560, 280)
+	page.add_child(title)
+	var sub := UIUtil.label("Turno de noche  ·  12:00 AM – 6:00 AM", 15, UIUtil.GOLD_DIM)
+	sub.position = Vector2(82, 330)
+	page.add_child(sub)
+
+	var col: VBoxContainer = _column(page, 60, 378, 520, 0)
+	_fnaf(col, "Nuevo juego", _on_new_game)
+	var cont: Button = _fnaf(col, "Continuar   ·   Noche %d" % GameState.unlocked_night, func(): GameState.start_night(GameState.unlocked_night))
+	cont.disabled = GameState.unlocked_night <= 1
+	_fnaf(col, "Elegir noche", func(): _show(Page.PLAY))
+	_fnaf(col, "Configuración", func(): _show(Page.SETTINGS))
+	_fnaf(col, "Controles", func(): _show(Page.CONTROLS))
+	_fnaf(col, "Salir", func(): get_tree().quit())
+
+	var credit := UIUtil.label("Universidad de Colima · Facultad de Telemática  ·  Ingeniería de Software — Videojuegos  ·  Los Temerarios", 12, Color(0.45, 0.43, 0.38))
+	credit.position = Vector2(82, 680)
 	page.add_child(credit)
+
+
+func _fnaf(parent: Control, text: String, cb: Callable) -> Button:
+	var b := UIUtil.fnaf_button(text, 28)
+	b.custom_minimum_size = Vector2(500, 44)
+	b.pressed.connect(cb)
+	parent.add_child(b)
+	return b
 
 
 # ============================================================== JUGAR
@@ -148,7 +167,7 @@ func _build_play() -> void:
 	_confirm = Control.new()
 	_confirm.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_confirm.visible = false
-	page.add_child(_confirm)
+	add_child(_confirm)
 	var dim := ColorRect.new()
 	dim.color = Color(0, 0, 0, 0.78)
 	_confirm.add_child(dim)
